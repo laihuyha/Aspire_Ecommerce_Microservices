@@ -4,4 +4,9 @@
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Catalog.Application.csproj" />
+    <ProjectReference Include="..\Domain\Catalog.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

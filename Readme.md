@@ -80,7 +80,7 @@ Aspire_Ecommerce_Microservices/
 - **AppHost**: Orchestrates and runs all microservices, manages service discovery, configuration, and environment setup.
 - **ServiceDefaults**: Provides shared configuration, extension methods, and implements cross-cutting concerns (resilience, health checks, telemetry).
 - **BuildingBlocks**: Contains reusable abstractions, interfaces, and utilities to promote DRY and clean architecture.
-- **Services**: Each microservice follows Clean Architecture, with clear separation of API, Application, Domain, and Infrastructure layers.
+- **Services**: Each microservice follows Clean Architecture, with clear separation of API, Application, Domain, Infrastructure, and (for Catalog) Persistence layers.
 
 ---
 
@@ -98,6 +98,7 @@ Aspire_Ecommerce_Microservices/
   - **Application**: Business logic, use cases
   - **Domain**: Core models, rules
   - **Infrastructure**: Data access, integrations
+  - **Persistence**: Database context and migrations
 
 ### Basket Service
 
@@ -161,7 +162,7 @@ Aspire_Ecommerce_Microservices/
 
 ## Extending the Platform
 
-- **Add a new microservice**: Use the existing structure as a template. Implement API, Application, Domain, and Infrastructure layers.
+- **Add a new microservice**: Use the existing structure as a template. Implement API, Application, Domain, Infrastructure, and (if needed) Persistence layers.
 - **Add shared logic**: Place reusable code in `BuildingBlocks` or `ServiceDefaults`.
 - **Integrate new tools**: Leverage .NET Aspire's extensibility for monitoring, resilience, and configuration.
 

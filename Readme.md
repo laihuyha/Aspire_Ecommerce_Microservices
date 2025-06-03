@@ -1,39 +1,66 @@
 # Aspire Ecommerce Microservices
 
-This repository contains a modular microservices solution for an ecommerce platform, built using .NET Aspire.
+A modular, production-grade microservices solution for ecommerce, built with .NET Aspire. This repository demonstrates scalable architecture, clean code principles, and modern cloud-native patterns.
+
+---
+
+## Table of Contents
+
+- [Solution Structure](#solution-structure)
+- [Getting Started](#getting-started)
+- [Architecture Overview](#architecture-overview)
+- [Microservices Breakdown](#microservices-breakdown)
+- [Technical Features](#technical-features)
+- [Development Guidelines](#development-guidelines)
+- [Extending the Platform](#extending-the-platform)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Solution Structure
 
-- **Aspire/**
-  - **AppHost/**: Main entry point for hosting and orchestrating microservices.
-    - `AppHost.csproj`, `AppHost.cs`: Project and startup logic.
-    - `appsettings.json`, `appsettings.Development.json`: Configuration files.
-    - `Properties/launchSettings.json`: Launch profiles for development.
-  - **ServiceDefaults/**: Shared service configuration and extensions.
-    - `Extensions.cs`: Common extension methods.
-    - `ServiceDefaults.csproj`: Project file for shared logic.
-  - `AppHost.sln`: Solution file for the entire microservices system.
-  - `Directory.Build.props`, `Directory.Packages.props`: Centralized build and package management.
+```
+Aspire_Ecommerce_Microservices/
+│
+├── Aspire/
+│   ├── AppHost/                # Main entry point, orchestration, and configuration
+│   ├── ServiceDefaults/        # Shared service configuration and extensions
+│   ├── AppHost.sln             # Solution file
+│   ├── Directory.Build.props   # Centralized build settings
+│   └── Directory.Packages.props# Centralized package management
+│
+├── BuildingBlocks/             # Shared abstractions, interfaces, and utilities
+│
+└── Services/
+    ├── Catalog/                # Product catalog microservice
+    │   ├── API/                # REST API endpoints
+    │   ├── Application/        # Business logic and use cases
+    │   ├── Domain/             # Domain models and rules
+    │   ├── Infrastructure/     # Data access and integrations
+    │   └── Persistence/        # Database context and migrations
+    └── Basket/                 # Shopping basket microservice
+        └── Basket.API/         # API endpoints for basket operations
+```
 
-- **BuildingBlocks/**: Shared components and utilities used across services.
-  - Common abstractions, interfaces, and reusable components.
-
-- **Services/**: Individual microservices that make up the ecommerce platform.
-  - **Catalog/**: Product catalog management service.
-    - **API/**: RESTful API endpoints and controllers.
-    - **Application/**: Application business logic and use cases.
-    - **Domain/**: Core domain models and business rules.
-    - **Infrastructure/**: Data access, external services integration.
-  - **Basket/**: Shopping basket service.
-    - **Basket.API/**: API endpoints for basket operations.
+---
 
 ## Getting Started
 
-1. **Prerequisites**
-   - [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
-   - Visual Studio 2022+ or VS Code
+### Prerequisites
 
-2. **Build the Solution**
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
+- Visual Studio 2022+ or VS Code
+
+### Build and Run
+
+1. **Clone the repository**
+   ```powershell
+   git clone <your-repo-url>
+   cd Aspire_Ecommerce_Microservices
+   ```
+
+2. **Build the solution**
    ```powershell
    dotnet build Aspire\AppHost.sln
    ```
@@ -44,66 +71,62 @@ This repository contains a modular microservices solution for an ecommerce platf
    ```
 
 4. **Configuration**
-   - Adjust settings in `appsettings.json` as needed for your environment.
+   - Adjust `appsettings.json` and environment-specific files as needed.
 
-## Project Overview
+---
 
-### Core Components
+## Architecture Overview
 
-- **AppHost**: 
-  - Orchestrates and runs all microservices
-  - Manages service discovery and communication
-  - Handles configuration and environment setup
+- **AppHost**: Orchestrates and runs all microservices, manages service discovery, configuration, and environment setup.
+- **ServiceDefaults**: Provides shared configuration, extension methods, and implements cross-cutting concerns (resilience, health checks, telemetry).
+- **BuildingBlocks**: Contains reusable abstractions, interfaces, and utilities to promote DRY and clean architecture.
+- **Services**: Each microservice follows Clean Architecture, with clear separation of API, Application, Domain, and Infrastructure layers.
 
-- **ServiceDefaults**: 
-  - Contains shared configuration and extension methods
-  - Implements common service features:
-    - Service discovery
-    - Resilience patterns
-    - Health checks
-    - OpenTelemetry integration
-    - Standardized HTTP client configuration
+---
 
-### Microservices
+## Microservices Breakdown
 
-1. **Catalog Service**
-   - Manages product catalog and inventory
-   - **Key Features**:
-     - Product information management
-     - Category management
-     - Search and filtering
-     - Brand management
-   - **Architecture**:
+### Catalog Service
 
-2. **Basket Service**
-   - Handles shopping cart operations
-   - **Key Features**:
-     - Shopping cart management
-     - Item addition/removal
-     - Price calculation
-     - Temporary storage
-   - **Architecture**:
+- **Purpose**: Manages product catalog and inventory.
+- **Key Features**:
+  - Product and category management
+  - Search and filtering
+  - Brand management
+- **Layers**:
+  - **API**: RESTful endpoints
+  - **Application**: Business logic, use cases
+  - **Domain**: Core models, rules
+  - **Infrastructure**: Data access, integrations
+
+### Basket Service
+
+- **Purpose**: Handles shopping cart operations.
+- **Key Features**:
+  - Shopping cart CRUD
+  - Item addition/removal
+  - Price calculation
+  - Temporary storage
+
+---
 
 ## Technical Features
 
 ### Monitoring and Diagnostics
 
-- Health checks endpoints at `/health` and `/alive`
+- Health check endpoints: `/health`, `/alive`
 - OpenTelemetry integration for:
   - Distributed tracing
   - Metrics collection
-  - Logging
-- Support for multiple telemetry exporters:
+  - Structured logging
+- Multiple telemetry exporters supported:
   - OTLP (OpenTelemetry Protocol)
   - Azure Monitor (optional)
 
 ### Resilience and Reliability
 
-- Built-in resilience patterns
-- Standard HTTP client configuration with:
-  - Automatic retries
-  - Circuit breaker
-  - Timeout policies
+- Built-in resilience patterns (retry, circuit breaker, timeout)
+- Standardized HTTP client configuration
 - Service discovery integration
 
 ### Security
@@ -112,20 +135,46 @@ This repository contains a modular microservices solution for an ecommerce platf
 - Configurable service discovery schemes
 - Environment-specific settings
 
+---
+
 ## Development Guidelines
 
-1. **Service Development**
-   - Follow Clean Architecture principles
-   - Implement health checks for monitoring
-   - Use OpenTelemetry for observability
-   - Implement resilience patterns
+### Service Development
 
-2. **Configuration Management**
-   - Use environment-specific settings
-   - Follow configuration best practices
-   - Utilize centralized package management
+- Follow Clean Architecture principles
+- Implement health checks and OpenTelemetry for observability
+- Use resilience patterns for all outbound calls
 
-3. **Deployment**
-   - Support for containerization
-   - Environment-specific configurations
-   - Orchestration using .NET Aspire
+### Configuration Management
+
+- Use environment-specific settings
+- Centralize package and build management
+- Store secrets securely (do not commit secrets to source control)
+
+### Deployment
+
+- Containerization support (add Dockerfiles as needed)
+- Environment-specific configuration
+- Orchestration via .NET Aspire or external orchestrators (Kubernetes, Docker Compose, etc.)
+
+---
+
+## Extending the Platform
+
+- **Add a new microservice**: Use the existing structure as a template. Implement API, Application, Domain, and Infrastructure layers.
+- **Add shared logic**: Place reusable code in `BuildingBlocks` or `ServiceDefaults`.
+- **Integrate new tools**: Leverage .NET Aspire's extensibility for monitoring, resilience, and configuration.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---

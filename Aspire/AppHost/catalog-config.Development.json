@@ -1,0 +1,17 @@
+{
+  "CatalogApi": {
+    "Environment": "Development",
+    "HttpPort": 8080,
+    "HttpsPort": 8081,
+    "ConnectionStrings": {
+      "Database": ""
+    },
+    "MongoDb": {
+      "Host": "",
+      "Credentials": {
+        "UserName": "",
+        "Password": ""
+      }
+    }
+  }
+}

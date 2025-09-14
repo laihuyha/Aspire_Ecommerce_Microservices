@@ -1,8 +1,8 @@
 {
   "CatalogApi": {
     "Environment": "Development",
-    "HttpPort": 8080,
-    "HttpsPort": 8081,
+    // "HttpPort": 8080,
+    // "HttpsPort": 8081,
     "ConnectionStrings": {
       "Database": ""
     },

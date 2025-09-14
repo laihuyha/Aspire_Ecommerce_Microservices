@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<Nullable>enable</Nullable>
+		<Nullable>disable</Nullable>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<AnalysisMode>all</AnalysisMode>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>

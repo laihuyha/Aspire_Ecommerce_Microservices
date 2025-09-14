@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Catalog API", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "Basket API", Version = "v1" });
 });
 
 builder.Services.AddOpenApi();

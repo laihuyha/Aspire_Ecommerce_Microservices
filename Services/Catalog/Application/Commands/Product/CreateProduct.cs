@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Domain;
 using Mapster;
+using Marten;
 
 namespace Application.Commands;
 
@@ -14,10 +15,18 @@ public record CreateProductCommandResponse(Guid ProductId);
 
 public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand, CreateProductCommandResponse>
 {
+    private readonly IDocumentSession _document;
+
+    public CreateProductCommandHandler(IDocumentSession document)
+    {
+        _document = document;
+    }
+
     public async Task<CreateProductCommandResponse> Handle(CreateProductCommand command, CancellationToken cancellationToken)
     {
         var product = command.Adapt<Product>();
-        await Task.CompletedTask;
+        _document.Store(product);
+        await _document.SaveChangesAsync(cancellationToken);
         return new CreateProductCommandResponse(product.Id);
     }
 }

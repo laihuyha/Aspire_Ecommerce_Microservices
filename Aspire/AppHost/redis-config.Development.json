@@ -1,0 +1,7 @@
+{
+  "Redis": {
+    "Image": "redis",
+    "Port": 6379,
+    "Volume": "./db/redis_data:/data"
+  }
+}

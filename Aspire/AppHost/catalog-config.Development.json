@@ -1,16 +1,16 @@
 {
   "CatalogApi": {
     "Environment": "Development",
-    // "HttpPort": 8080,
-    // "HttpsPort": 8081,
+    "HttpPort": 8080,
+    "HttpsPort": 8081,
     "ConnectionStrings": {
-      "Database": ""
+      "Database": "mongodb://root:123456@mongo:27017"
     },
     "MongoDb": {
-      "Host": "",
+      "Host": "mongo",
       "Credentials": {
-        "UserName": "",
-        "Password": ""
+        "UserName": "root",
+        "Password": "123456"
       }
     }
   }

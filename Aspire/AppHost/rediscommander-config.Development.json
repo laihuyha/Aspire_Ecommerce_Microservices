@@ -1,0 +1,10 @@
+{
+  "RedisCommander": {
+    "Image": "rediscommander/redis-commander:latest",
+    "RedisHosts": "BasketCache:distributedcache:6379",
+    "HttpUser": "root",
+    "HttpPassword": "secret",
+    "Port": 7001,
+    "TargetPort": 8081
+  }
+}

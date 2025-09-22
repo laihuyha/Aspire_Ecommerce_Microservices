@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mapster" />
-    <PackageReference Include="MediatR" />
+    <ProjectReference Include="..\..\Aspire\ServiceDefaults\ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,56 @@
+services:
+  catalog.db:
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    volumes:
+      - ./db/catalogdb_data:/data/db
+    ports:
+      - 27017:27017
+  basket.db:
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=BasketDb
+    volumes:
+      - ./db/basket_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+  catalog.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=mongodb://root:123456@catalog.db:27017
+      - MongoDb__Host=catalog.db
+      - MongoDb__Credentials__UserName=root
+      - MongoDb__Credentials__Password=123456
+    ports:
+      - "6000:8080"
+      - "6060:8081"
+  basket.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8082
+      - ASPNETCORE_HTTPS_PORTS=8083
+      - ConnectionStrings__Marten=Server=basket.db;Port=5432;Database=BasketDb;User Id=postgres;Password=123456;Include Error Detail=true
+      - ConnectionStrings__Redis=distributedcache
+    ports:
+      - "6001:8082"
+      - "6061:8083"
+  distributedcache:
+    container_name: distributedcache
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./db/redis_data:/data
+  redis-commander:
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=BasketCache:distributedcache:6379
+      - HTTP_USER=root
+      - HTTP_PASSWORD=secret
+    ports:
+      - 7001:8081
+    depends_on:
+      - distributedcache

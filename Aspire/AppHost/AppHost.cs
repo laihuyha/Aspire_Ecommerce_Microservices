@@ -63,15 +63,15 @@ builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WaitFor(mongoDb);
 
 // Basket API
-builder.AddProject("basket-api", "../../Services/Basket/Basket.API/Basket.API.csproj")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", basketApiConfig?.Environment ?? "Development")
-    .WithEnvironment("ASPNETCORE_HTTP_PORTS", basketApiConfig?.HttpPort?.ToString() ?? "8080")
-    .WithEnvironment("ASPNETCORE_HTTPS_PORTS", basketApiConfig?.HttpsPort?.ToString() ?? "8081")
-    .WithEnvironment("ConnectionStrings__Marten", basketApiConfig?.ConnectionStrings?.Marten ?? "")
-    .WithEnvironment("ConnectionStrings__Redis", basketApiConfig?.ConnectionStrings?.Redis ?? "")
-    .WithHttpEndpoint(port: 6001, targetPort: basketApiConfig?.HttpPort ?? 8082, name: "basket-http")
-    .WithHttpsEndpoint(port: 6061, targetPort: basketApiConfig?.HttpsPort ?? 8083, name: "basket-https")
-    .WaitFor(postgres)
-    .WaitFor(redis);
+// builder.AddProject("basket-api", "../../Services/Basket/Basket.API/Basket.API.csproj")
+//     .WithEnvironment("ASPNETCORE_ENVIRONMENT", basketApiConfig?.Environment ?? "Development")
+//     .WithEnvironment("ASPNETCORE_HTTP_PORTS", basketApiConfig?.HttpPort?.ToString() ?? "8080")
+//     .WithEnvironment("ASPNETCORE_HTTPS_PORTS", basketApiConfig?.HttpsPort?.ToString() ?? "8081")
+//     .WithEnvironment("ConnectionStrings__Marten", basketApiConfig?.ConnectionStrings?.Marten ?? "")
+//     .WithEnvironment("ConnectionStrings__Redis", basketApiConfig?.ConnectionStrings?.Redis ?? "")
+//     .WithHttpEndpoint(port: 6001, targetPort: basketApiConfig?.HttpPort ?? 8082, name: "basket-http")
+//     .WithHttpsEndpoint(port: 6061, targetPort: basketApiConfig?.HttpsPort ?? 8083, name: "basket-https")
+//     .WaitFor(postgres)
+//     .WaitFor(redis);
 
 builder.Build().Run();

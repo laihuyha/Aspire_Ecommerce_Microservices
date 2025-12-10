@@ -17,7 +17,10 @@
 
     <!-- Services Package Region -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
     <PackageVersion Include="Mapster" Version="7.4.0" />
     <PackageVersion Include="MediatR" Version="12.5.0" />
     <PackageVersion Include="Marten" Version="8.11.0" />

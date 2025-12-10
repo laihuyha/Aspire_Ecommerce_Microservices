@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Threading.Tasks;
-using API.DTO;
-using API.Responses;
-using Application.Commands;
+using BuildingBlocks.Contracts.Requests;
+using BuildingBlocks.Contracts.Responses;
+using Catalog.Application.Commands;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
-namespace API.Controllers;
+namespace Catalog.Api.Controllers;
 
 // [Authorize]
 public class ProductController : BaseApiController

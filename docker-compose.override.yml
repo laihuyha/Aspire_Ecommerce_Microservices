@@ -1,39 +1,58 @@
+# Development overrides - only contains development-specific overrides
+# Uses environment variables with sensible defaults for development
+
 services:
   catalog.api:
+    build:
+      context: .
+      dockerfile: Services/Catalog/API/Dockerfile
+      target: development
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
-      - ConnectionStrings__Database=mongodb://root:123456@catalog.db:27017
-      - MongoDb__Host=catalog.db
-      - MongoDb__Credentials__UserName=root
-      - MongoDb__Credentials__Password=123456
+      # Override these in your .env file for development
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devpassword123}
+      - REDIS_COMMANDER_USER=${REDIS_COMMANDER_USER:-admin}
+      - REDIS_COMMANDER_PASSWORD=${REDIS_COMMANDER_PASSWORD:-devpassword123}
+    volumes:
+      # Mount source code for hot reload in development
+      - ./Services/Catalog:/app/Services/Catalog:ro
+      - ./BuildingBlocks:/app/BuildingBlocks:ro
+      - ./Aspire/ServiceDefaults:/app/Aspire/ServiceDefaults:ro
     ports:
-      - "6000:8080"
-      - "6060:8081"
-  basket.api:
+      - "6000:8080"  # HTTP
+      - "6060:8081"  # HTTPS
+    # Override resource limits for development
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  catalog.db:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8082
-      - ASPNETCORE_HTTPS_PORTS=8083
-      - ConnectionStrings__Marten=Server=basket.db;Port=5432;Database=BasketDb;User Id=postgres;Password=123456;Include Error Detail=true
-      - ConnectionStrings__Redis=distributedcache
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devpassword123}
     ports:
-      - "6001:8082"
-      - "6061:8083"
+      - "5433:5432"
+    volumes:
+      - ./db/postgres/catalog:/var/lib/postgresql/data
+
   distributedcache:
-    container_name: distributedcache
     ports:
       - "6379:6379"
     volumes:
-      - ./db/redis_data:/data
+      - ./db/redis:/data
+    # Remove memory limits for development flexibility
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   redis-commander:
-    container_name: redis-commander
     environment:
-      - REDIS_HOSTS=BasketCache:distributedcache:6379
-      - HTTP_USER=root
-      - HTTP_PASSWORD=secret
+      - REDIS_COMMANDER_USER=${REDIS_COMMANDER_USER:-admin}
+      - REDIS_COMMANDER_PASSWORD=${REDIS_COMMANDER_PASSWORD:-devpassword123}
     ports:
-      - 7001:8081
-    depends_on:
-      - distributedcache
+      - "7001:8081"

@@ -1,4 +1,6 @@
 using System.Reflection;
+using BuildingBlocks.CQRS.Behaviors;
+using Catalog.Api.Filters;
 using Marten;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddControllers(); // Add this line to register controllers
+builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>()); // Add this line to register controllers
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -21,6 +23,9 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddOpenApi("catalog");
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("Catalog.Application")));
+
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ErrorHandlingBehavior<,>));
 
 builder.Services.AddMarten(options =>
 {

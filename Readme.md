@@ -50,9 +50,12 @@ Aspire_Ecommerce_Microservices/
 ### Prerequisites
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
+- [Docker](https://docker.com) and Docker Compose
 - Visual Studio 2022+ or VS Code
 
 ### Build and Run
+
+#### Option 1: Using .NET Aspire (Recommended for Development)
 
 1. **Clone the repository**
    ```powershell
@@ -72,6 +75,76 @@ Aspire_Ecommerce_Microservices/
 
 4. **Configuration**
    - Adjust `appsettings.json` and environment-specific files as needed.
+
+#### Option 2: Using Docker Compose (Production-Ready)
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd Aspire_Ecommerce_Microservices
+   ```
+
+2. **Configure environment**
+   ```bash
+   # Copy and configure environment variables
+   cp .env.example .env
+   # Edit .env file with your settings
+   ```
+
+3. **Build and run services**
+   ```bash
+   # For development (with hot reload)
+   docker-compose up --build
+
+   # For production
+   docker-compose -f docker-compose.yml up --build -d
+   ```
+
+4. **Access services**
+   - **Catalog API**: http://localhost:6000 (HTTP), https://localhost:6060 (HTTPS)
+   - **Redis Commander**: http://localhost:7001
+   - **PostgreSQL**: localhost:5433 (from host)
+
+#### Option 3: Build Specific Services
+
+```bash
+# Build Catalog API only
+docker-compose build catalog.api
+
+# Run only database and cache
+docker-compose up catalog.db distributedcache
+
+# View logs
+docker-compose logs -f catalog.api
+```
+
+### Docker Development Features
+
+- **Multi-stage builds**: Optimized for both development and production
+- **Hot reload**: Mount source code for live development
+- **Environment variables**: Secure configuration management
+- **Health checks**: Automatic service health monitoring
+- **Resource limits**: Proper memory and CPU allocation
+- **Network isolation**: Secure inter-service communication
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+# Database
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_USER=postgres
+POSTGRES_DB=CatalogDB
+
+# Redis
+REDIS_COMMANDER_USER=admin
+REDIS_COMMANDER_PASSWORD=your_admin_password
+
+# Service Ports (optional overrides)
+CATALOG_HTTP_PORT=6000
+POSTGRES_PORT=5433
+```
 
 ---
 

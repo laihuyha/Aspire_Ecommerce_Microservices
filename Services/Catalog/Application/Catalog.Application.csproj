@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Marten" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
   </ItemGroup>
-
 
 </Project>

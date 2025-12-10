@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
-using Domain;
+using Catalog.Domain.Aggregates.Product;
+using Catalog.Domain.Aggregates.Product.Events;
 using Marten;
+using MediatR;
 
-namespace Application.Commands;
+namespace Catalog.Application.Commands;
 
 public record CreateProductCommand(
     string Name,
@@ -20,10 +22,12 @@ public record CreateProductCommandResponse(Guid ProductId);
 public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand, CreateProductCommandResponse>
 {
     private readonly IDocumentSession _document;
+    private readonly IMediator _mediator;
 
-    public CreateProductCommandHandler(IDocumentSession document)
+    public CreateProductCommandHandler(IDocumentSession document, IMediator mediator)
     {
         _document = document;
+        _mediator = mediator;
     }
 
     public async Task<CreateProductCommandResponse> Handle(CreateProductCommand command, CancellationToken cancellationToken)
@@ -42,6 +46,9 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 
         _document.Store(product);
         await _document.SaveChangesAsync(cancellationToken);
+
+        // Publish domain event
+        await _mediator.Publish(new ProductCreatedDomainEvent(product.Id), cancellationToken);
 
         return new CreateProductCommandResponse(product.Id);
     }

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using BuildingBlocks.Enity;
+using BuildingBlocks.Entity;
 
-namespace Domain;
+namespace Catalog.Domain.Aggregates.Product;
 
-public class Product : BaseEntity
+public class Product : BaseEntity<Guid>
 {
     public string Name { get; private set; }
     public IReadOnlyList<string> Categories => _categories.AsReadOnly();

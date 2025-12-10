@@ -5,6 +5,9 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Configuration;
 
+// Main application host for .NET Aspire orchestration.
+// Defines the distributed application with PostgreSQL, Redis, and microservices.
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.Configuration.AddAdditionalConfigurationFiles();

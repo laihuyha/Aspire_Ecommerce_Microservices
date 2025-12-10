@@ -2,14 +2,15 @@
 # You'll need docker-compose.orverride.yml file for env variables and something more than it.
 services:
   catalog.db:
-    image: mongo:7.0.14
+    image: postgres:16.4
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=123456
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=CatalogDB
     volumes:
-      - ./db/catalogdb_data:/data/db
+      - ./db/catalog_data:/var/lib/postgresql/data
     ports:
-      - 27017:27017
+      - 5432:5432
   basket.db:
     image: postgres:16.4
     environment:

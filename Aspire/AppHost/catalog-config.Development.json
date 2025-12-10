@@ -4,14 +4,7 @@
     "HttpPort": 8080,
     "HttpsPort": 8081,
     "ConnectionStrings": {
-      "Database": "mongodb://root:123456@mongo:27017"
-    },
-    "MongoDb": {
-      "Host": "mongo",
-      "Credentials": {
-        "UserName": "root",
-        "Password": "123456"
-      }
+      "Database": "Server=localhost;Port=5433;Database=CatalogDb;User ID=postgres;Password=123456;Include Error Detail=true"
     }
   }
 }

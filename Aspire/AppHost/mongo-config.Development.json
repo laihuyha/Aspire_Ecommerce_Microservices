@@ -1,9 +1,0 @@
-{
-  "Mongo": {
-    "Image": "mongo:7.0.14",
-    "RootUsername": "root",
-    "RootPassword": "123456",
-    "Port": 27017,
-    "Volume": "./db/catalogdb_data:/data/db"
-  }
-}

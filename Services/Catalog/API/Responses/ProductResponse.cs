@@ -2,4 +2,4 @@ using System;
 
 namespace API.Responses;
 
-public record CreateProductResponse(Guid Id);
+public record CreateProductResponse(Guid ProductId);

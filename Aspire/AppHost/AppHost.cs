@@ -1,3 +1,4 @@
+using System;
 using AppHost.Configs;
 using AppHost.Extensions;
 using Aspire.Hosting;
@@ -8,42 +9,46 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.Configuration.AddAdditionalConfigurationFiles();
 
+var rnd = Guid.NewGuid().ToString();
+
 // Load infrastructure configs from configuration
-var mongoConfig = builder.Configuration.GetSection("Mongo").Get<MongoConfig>();
 var postgresConfig = builder.Configuration.GetSection("Postgres").Get<PostgresConfig>();
 var redisConfig = builder.Configuration.GetSection("Redis").Get<RedisConfig>();
 var redisCommanderConfig = builder.Configuration.GetSection("RedisCommander").Get<RedisCommanderConfig>();
 var catalogApiConfig = builder.Configuration.GetSection("CatalogApi").Get<CatalogApiConfig>();
 var basketApiConfig = builder.Configuration.GetSection("BasketApi").Get<BasketApiConfig>();
 
-var mongoUsername = builder.AddParameter("mongoDbUsername", value: mongoConfig?.RootUsername ?? "root");
-var mongoPassword = builder.AddParameter("mongoDbPassword", value: mongoConfig?.RootPassword ?? "123456", secret: true);
-
 var postgresUsername = builder.AddParameter("postgresDbUsername", value: postgresConfig?.User ?? "postgres");
 var postgresPassword = builder.AddParameter("postgresDbPassword", value: postgresConfig?.Password ?? "123456", secret: true);
 
-var mongo = builder.AddMongoDB("mongo", mongoConfig?.Port ?? 27017, mongoUsername, mongoPassword).WithImage("mongo:7.0.14")
-.WithEndpoint(port: mongoConfig?.Port ?? 27017, targetPort: mongoConfig?.Port ?? 27017, name: "mongodb")
-.WithLifetime(ContainerLifetime.Persistent);
+var catalog = builder.AddPostgres("catalog")
+    .WithImage("postgres:16.4")
+    .WithUserName(postgresUsername)
+    .WithPassword(postgresPassword)
+    .WithPgAdmin()
+    .WithEndpoint(port: 5433, targetPort: 5432, name: "CatalogDb") // Host: localhost:5433
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithVolume("catalog-data", "/var/lib/postgresql/data")
+    .WithEnvironment("FORCE_RESTART", rnd) // trick: mỗi lần app chạy GUID khác → container restart
+    .AddDatabase("CatalogDb");
 
-var mongoDb = mongo.AddDatabase("mongodb");
+var basket = builder.AddPostgres("basket")
+    .WithImage("postgres:16.4")
+    .WithUserName(postgresUsername)
+    .WithPassword(postgresPassword)
+    .WithPgAdmin()
+    .WithEndpoint(port: 5434, targetPort: 5432, name: "BasketDb") // Host: localhost:5434
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithVolume("basket-data", "/var/lib/postgresql/data")
+    .WithEnvironment("FORCE_RESTART", rnd)
+    .AddDatabase("BasketDb");
 
-var postgres = builder.AddPostgres("postgres").WithImage("postgres:16.4")
-.WithUserName(postgresUsername)
-.WithPassword(postgresPassword)
-.WithPgAdmin()
-.WithEndpoint(port: postgresConfig?.Port ?? 5432, targetPort: postgresConfig?.Port ?? 5432, name: "BasketDb") // consider remove all WithEndpoint
-.WithLifetime(ContainerLifetime.Persistent)
-.AddDatabase("BasketDb");
+var redis = builder.AddContainer("distributedcache", redisConfig?.Image ?? "redis:latest")
+    .WithEndpoint(port: 6379, targetPort: 6379, name: "redis") // Host: localhost:6379
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithVolume("redis-data", "/var/lib/redis/data")
+    .WithEnvironment("FORCE_RESTART", rnd);
 
-// Redis distributed cache
-var redis = builder.AddContainer("distributedcache", redisConfig?.Image ?? "redis")
-    .WithEndpoint(port: redisConfig?.Port ?? 6379, targetPort: redisConfig?.Port ?? 6379, name: "redis")
-    .WithLifetime(ContainerLifetime.Persistent);
-
-// Redis Commander
-// Example: Instead Add built-in method for Redis, Postgres, Mongo we can use like this to add container.
-// Cons: Manual add, more complex.
 builder.AddContainer("redis-commander", redisCommanderConfig?.Image ?? "rediscommander/redis-commander:latest")
     .WithEnvironment("REDIS_HOSTS", redisCommanderConfig?.RedisHosts ?? "BasketCache:distributedcache:6379")
     .WithEnvironment("HTTP_USER", redisCommanderConfig?.HttpUser ?? "root")
@@ -55,12 +60,9 @@ builder.AddContainer("redis-commander", redisCommanderConfig?.Image ?? "rediscom
 builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", catalogApiConfig?.Environment ?? "Development")
     .WithEnvironment("ConnectionStrings__Database", catalogApiConfig?.ConnectionStrings?.Database ?? "")
-    .WithEnvironment("MongoDb__Host", catalogApiConfig?.MongoDb?.Host ?? "")
-    .WithEnvironment("MongoDb__Credentials__UserName", catalogApiConfig?.MongoDb?.Credentials?.UserName ?? "")
-    .WithEnvironment("MongoDb__Credentials__Password", catalogApiConfig?.MongoDb?.Credentials?.Password ?? "")
     .WithHttpEndpoint(port: 6000, targetPort: 8080, name: "catalog-http")
     .WithHttpsEndpoint(port: 6060, targetPort: 8081, name: "catalog-https")
-    .WaitFor(mongoDb);
+    .WaitFor(catalog);
 
 // Basket API
 // builder.AddProject("basket-api", "../../Services/Basket/Basket.API/Basket.API.csproj")

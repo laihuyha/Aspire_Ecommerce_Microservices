@@ -1,21 +1,4 @@
 services:
-  catalog.db:
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=123456
-    volumes:
-      - ./db/catalogdb_data:/data/db
-    ports:
-      - 27017:27017
-  basket.db:
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=BasketDb
-    volumes:
-      - ./db/basket_data:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

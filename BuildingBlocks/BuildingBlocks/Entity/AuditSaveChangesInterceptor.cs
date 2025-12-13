@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using BuildingBlocks.Entity;
 using System.Linq;
 
 namespace BuildingBlocks.Entity;

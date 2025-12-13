@@ -5,11 +5,11 @@ namespace AppHost.Configs;
 /// </summary>
 public class Healthcheck
 {
-    public string? Interval { get; set; }
-    public string? Timeout { get; set; }
-    public int? Retries { get; set; }
-    public string? StartPeriod { get; set; }
-    public string? Test { get; set; }
+    public string Interval { get; set; }
+    public string Timeout { get; set; }
+    public int Retries { get; set; }
+    public string StartPeriod { get; set; }
+    public string Test { get; set; }
 }
 
 /// <summary>
@@ -17,8 +17,8 @@ public class Healthcheck
 /// </summary>
 public class Resources
 {
-    public ResourceLimits? Limits { get; set; }
-    public ResourceLimits? Reservations { get; set; }
+    public ResourceLimits Limits { get; set; }
+    public ResourceLimits Reservations { get; set; }
 }
 
 /// <summary>
@@ -26,8 +26,8 @@ public class Resources
 /// </summary>
 public class ResourceLimits
 {
-    public string? Memory { get; set; }
-    public string? Cpus { get; set; }
+    public string Memory { get; set; }
+    public string Cpus { get; set; }
 }
 
 /// <summary>
@@ -35,5 +35,5 @@ public class ResourceLimits
 /// </summary>
 public class Debug
 {
-    public bool? ForceRestart { get; set; }
+    public bool ForceRestart { get; set; }
 }

@@ -12,71 +12,91 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.Configuration.AddAdditionalConfigurationFiles();
 
-var rnd = Guid.NewGuid().ToString();
+// Load centralized infrastructure config
+var infraConfig = builder.Configuration.GetSection("Infra").Get<InfraConfig>() ?? throw new InvalidOperationException("Infra config not found");
 
-// Load infrastructure configs from configuration
-var postgresConfig = builder.Configuration.GetSection("Postgres").Get<PostgresConfig>();
-var redisConfig = builder.Configuration.GetSection("Redis").Get<RedisConfig>();
-var redisCommanderConfig = builder.Configuration.GetSection("RedisCommander").Get<RedisCommanderConfig>();
-var catalogApiConfig = builder.Configuration.GetSection("CatalogApi").Get<CatalogApiConfig>();
-var basketApiConfig = builder.Configuration.GetSection("BasketApi").Get<BasketApiConfig>();
+var postgresUsername = builder.AddParameter(
+    "postgresDbUsername",
+    value: infraConfig.Services?.Postgres?["catalog"]?.User ?? "postgres");
+var postgresPassword = builder.AddParameter(
+    "postgresDbPassword",
+    value: infraConfig.Services?.Postgres?["catalog"]?.Password ?? "123456",
+    secret: true);
 
-var postgresUsername = builder.AddParameter("postgresDbUsername", value: postgresConfig?.User ?? "postgres");
-var postgresPassword = builder.AddParameter("postgresDbPassword", value: postgresConfig?.Password ?? "123456", secret: true);
+var catalog = AddPostgresDatabase(
+    builder,
+    "catalog",
+    infraConfig.Services?.Postgres?["catalog"],
+    postgresUsername,
+    postgresPassword);
 
-var catalog = builder.AddPostgres("catalog")
-    .WithImage("postgres:16.4")
-    .WithUserName(postgresUsername)
-    .WithPassword(postgresPassword)
-    .WithPgAdmin()
-    .WithEndpoint(port: 5433, targetPort: 5432, name: "CatalogDb") // Host: localhost:5433
+var basket = AddPostgresDatabase(
+    builder,
+    "basket",
+    infraConfig.Services?.Postgres?["basket"],
+    postgresUsername,
+    postgresPassword);
+
+var redis = builder.AddContainer("distributedcache", infraConfig.Services?.Redis?.Image ?? "redis:latest")
+    .WithEndpoint(port: infraConfig.Services?.Redis?.Port ?? 6379, targetPort: infraConfig.Services?.Redis?.TargetPort ?? 6379, name: "redis")
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithVolume("catalog-data", "/var/lib/postgresql/data")
-    .WithEnvironment("FORCE_RESTART", rnd) // trick: mỗi lần app chạy GUID khác → container restart
-    .AddDatabase("CatalogDb");
+    .WithVolume(infraConfig.Services?.Redis?.Volume ?? "redis-data", "/data");
 
-var basket = builder.AddPostgres("basket")
-    .WithImage("postgres:16.4")
-    .WithUserName(postgresUsername)
-    .WithPassword(postgresPassword)
-    .WithPgAdmin()
-    .WithEndpoint(port: 5434, targetPort: 5432, name: "BasketDb") // Host: localhost:5434
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithVolume("basket-data", "/var/lib/postgresql/data")
-    .WithEnvironment("FORCE_RESTART", rnd)
-    .AddDatabase("BasketDb");
-
-var redis = builder.AddContainer("distributedcache", redisConfig?.Image ?? "redis:latest")
-    .WithEndpoint(port: 6379, targetPort: 6379, name: "redis") // Host: localhost:6379
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithVolume("redis-data", "/var/lib/redis/data")
-    .WithEnvironment("FORCE_RESTART", rnd);
-
-builder.AddContainer("redis-commander", redisCommanderConfig?.Image ?? "rediscommander/redis-commander:latest")
-    .WithEnvironment("REDIS_HOSTS", redisCommanderConfig?.RedisHosts ?? "BasketCache:distributedcache:6379")
-    .WithEnvironment("HTTP_USER", redisCommanderConfig?.HttpUser ?? "root")
-    .WithEnvironment("HTTP_PASSWORD", redisCommanderConfig?.HttpPassword ?? "secret")
-    .WithEndpoint(port: redisCommanderConfig?.Port ?? 7001, targetPort: redisCommanderConfig?.TargetPort ?? 8081, name: "redis-commander")
+builder.AddContainer("redis-commander", infraConfig.Services?.RedisCommander?.Image ?? "rediscommander/redis-commander:latest")
+    .WithEnvironment("REDIS_HOSTS", infraConfig.Services?.RedisCommander?.RedisHosts ?? "local:distributedcache:6379")
+    .WithEnvironment("HTTP_USER", infraConfig.Services?.RedisCommander?.HttpUser ?? "admin")
+    .WithEnvironment("HTTP_PASSWORD", infraConfig.Services?.RedisCommander?.HttpPassword ?? "devpassword123")
+    .WithEndpoint(port: infraConfig.Services?.RedisCommander?.Port ?? 7001, targetPort: infraConfig.Services?.RedisCommander?.TargetPort ?? 8081, name: "redis-commander")
     .WaitFor(redis);
 
-// Catalog API
+int catalogApiPort = infraConfig.Apis?.Catalog?.HttpPort ?? 6000;
+int catalogApiHttpsPort = infraConfig.Apis?.Catalog?.HttpsPort ?? 6060;
+int catalogApiTargetPort = infraConfig.Apis?.Catalog?.TargetHttpPort ?? 8080;
+int catalogApiTargetHttpsPort = infraConfig.Apis?.Catalog?.TargetHttpsPort ?? 8081;
+
+int catalogDbPort = infraConfig.Services?.Postgres?["catalog"]?.TargetPort ?? 5432;
+string catalogDbName = infraConfig.Services?.Postgres?["catalog"]?.Db ?? "CatalogDb";
+string catalogDbUser = infraConfig.Services?.Postgres?["catalog"]?.User ?? "postgres";
+string catalogDbPassword = infraConfig.Services?.Postgres?["catalog"]?.Password ?? "123456";
+string catalogRedisPort = infraConfig.Services?.Redis?.TargetPort.ToString() ?? "6379";
+
+var catalogConnectionString = $"Server=catalog;Port={catalogDbPort};Database={catalogDbName};User Id={catalogDbUser};Password={catalogDbPassword};Include Error Detail=true";
 builder.AddProject<Projects.Catalog_API>("catalog-api")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", catalogApiConfig?.Environment ?? "Development")
-    .WithEnvironment("ConnectionStrings__Database", catalogApiConfig?.ConnectionStrings?.Database ?? "")
-    .WithHttpEndpoint(port: 6000, targetPort: 8080, name: "catalog-http")
-    .WithHttpsEndpoint(port: 6060, targetPort: 8081, name: "catalog-https")
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", infraConfig.Apis?.Catalog?.Environment ?? "Development")
+    .WithEnvironment("ConnectionStrings__CatalogDb", catalogConnectionString)
+    .WithEnvironment("ConnectionStrings__Redis", $"distributedcache:{catalogRedisPort}")
+    .WithHttpEndpoint(port: catalogApiPort, targetPort: catalogApiTargetPort, name: "catalog-http")
+    .WithHttpsEndpoint(port: catalogApiHttpsPort, targetPort: catalogApiTargetHttpsPort, name: "catalog-https")
     .WaitFor(catalog);
 
-// Basket API
-// builder.AddProject("basket-api", "../../Services/Basket/Basket.API/Basket.API.csproj")
-//     .WithEnvironment("ASPNETCORE_ENVIRONMENT", basketApiConfig?.Environment ?? "Development")
-//     .WithEnvironment("ASPNETCORE_HTTP_PORTS", basketApiConfig?.HttpPort?.ToString() ?? "8080")
-//     .WithEnvironment("ASPNETCORE_HTTPS_PORTS", basketApiConfig?.HttpsPort?.ToString() ?? "8081")
-//     .WithEnvironment("ConnectionStrings__Marten", basketApiConfig?.ConnectionStrings?.Marten ?? "")
-//     .WithEnvironment("ConnectionStrings__Redis", basketApiConfig?.ConnectionStrings?.Redis ?? "")
-//     .WithHttpEndpoint(port: 6001, targetPort: basketApiConfig?.HttpPort ?? 8082, name: "basket-http")
-//     .WithHttpsEndpoint(port: 6061, targetPort: basketApiConfig?.HttpsPort ?? 8083, name: "basket-https")
-//     .WaitFor(postgres)
-//     .WaitFor(redis);
+// Get default port for postgres services
+static int GetDefaultPort(string name) => name switch
+{
+    "catalog" => 5433,
+    "basket" => 5434,
+    _ => 5432
+};
+
+// Helper method to reduce duplication in postgres database configuration
+static IResourceBuilder<PostgresDatabaseResource> AddPostgresDatabase(
+    IDistributedApplicationBuilder builder,
+    string name,
+    PostgresInst? config,
+    IResourceBuilder<ParameterResource> username,
+    IResourceBuilder<ParameterResource> password)
+{
+    return builder.AddPostgres(name)
+        .WithImage(config?.Image ?? "postgres:16.4")
+        .WithUserName(username)
+        .WithPassword(password)
+        .WithPgAdmin()
+        .WithEndpoint(
+            port: config?.Port ?? GetDefaultPort(name),
+            targetPort: config?.TargetPort ?? 5432,
+            name: $"{name}Db")
+        .WithLifetime(ContainerLifetime.Persistent)
+        .WithVolume(config?.Volume ?? $"{name}-data", "/var/lib/postgresql/data")
+        .AddDatabase(config?.Db ?? $"{name}Db");
+}
 
 builder.Build().Run();

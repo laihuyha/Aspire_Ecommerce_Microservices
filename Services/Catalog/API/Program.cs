@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>()); // Add this line to register controllers
+builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -45,8 +45,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization(); // Add this line for authorization
+app.UseAuthorization();
 
-app.MapControllers(); // Add this line to map controller endpoints
+app.MapControllers();
 
 app.Run();

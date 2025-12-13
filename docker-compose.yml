@@ -1,5 +1,5 @@
-# Optimized docker-compose configuration for eCommerce microservices
-# Uses environment variables for sensitive data and proper networking
+﻿# Auto-generated docker-compose configuration from infra-config.json
+# Do not edit manually - changes will be overwritten
 
 services:
   catalog.api:

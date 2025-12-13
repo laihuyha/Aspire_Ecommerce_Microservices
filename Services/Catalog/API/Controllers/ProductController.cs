@@ -15,11 +15,11 @@ namespace Catalog.Api.Controllers;
 // [Authorize]
 public class ProductController : BaseApiController
 {
-    private readonly IMediator _mediatR;
+    private readonly IMediator _mediator;
 
-    public ProductController(IMediator mediatR)
+    public ProductController(IMediator mediator)
     {
-        _mediatR = mediatR;
+        _mediator = mediator;
     }
 
     [HttpPost("create")]
@@ -31,7 +31,7 @@ public class ProductController : BaseApiController
     public async Task<ActionResult<CreateProductResponse>> CreateProduct(CreateProductRequest product)
     {
         var command = product.Adapt<CreateProductCommand>();
-        var response = await _mediatR.Send(command);
+        var response = await _mediator.Send(command);
         var result = response.Adapt<CreateProductResponse>();
         return CreatedAtAction(nameof(CreateProduct), new { id = response.ProductId }, result);
     }

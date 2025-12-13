@@ -8,7 +8,7 @@ using Catalog.Domain.Aggregates.Product.Events;
 using Marten;
 using MediatR;
 
-namespace Catalog.Application.Commands;
+namespace Catalog.Application.Commands.Product;
 
 public record CreateProductCommand(
     string Name,
@@ -32,7 +32,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 
     public async Task<CreateProductCommandResponse> Handle(CreateProductCommand command, CancellationToken cancellationToken)
     {
-        var product = Product.Create(
+        var product = Domain.Aggregates.Product.Product.Create(
             command.Name,
             command.Price,
             command.Description,

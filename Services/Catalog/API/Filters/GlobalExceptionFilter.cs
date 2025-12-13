@@ -1,6 +1,8 @@
+using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 
 namespace Catalog.Api.Filters;
 
@@ -10,8 +12,23 @@ namespace Catalog.Api.Filters;
 /// </summary>
 public class GlobalExceptionFilter : IExceptionFilter
 {
+    private readonly ILogger<GlobalExceptionFilter> _logger;
+
+    private static readonly Action<ILogger, string, Exception> _unhandledExceptionLogged =
+        LoggerMessage.Define<string>(
+            LogLevel.Error,
+            new EventId(1, "UnhandledException"),
+            "Unhandled exception occurred while processing {RequestPath}");
+
+    public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
+    {
+        _logger = logger;
+    }
+
     public void OnException(ExceptionContext context)
     {
+        _unhandledExceptionLogged(_logger, context.HttpContext.Request.Path.Value ?? "unknown", context.Exception);
+
         var response = new
         {
             Type = "https://tools.ietf.org/html/rfc9110",
@@ -27,7 +44,5 @@ public class GlobalExceptionFilter : IExceptionFilter
         };
 
         context.ExceptionHandled = true;
-
-        // Log the exception if logging is configured
     }
 }

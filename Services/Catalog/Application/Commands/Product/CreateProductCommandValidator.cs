@@ -1,8 +1,7 @@
 using System;
-using Catalog.Application.Commands;
 using FluentValidation;
 
-namespace Catalog.Application.Validators;
+namespace Catalog.Application.Commands.Product;
 
 /// <summary>
 /// Validator for CreateProductCommand.
@@ -35,10 +34,12 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             .WithMessage("Categories are required.");
     }
 
-    private bool BeValidUrl(string url)
+    private static bool BeValidUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
+        {
             return true; // Optional field
+        }
 
         return Uri.TryCreate(url, UriKind.Absolute, out _) &&
                (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||

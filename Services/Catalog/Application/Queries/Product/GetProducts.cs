@@ -48,7 +48,7 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, GetProduc
             throw new ArgumentException("Page size must be between 1 and 100.", nameof(query));
         }
 
-        var productsQuery = _querySession.Query<Domain.Aggregates.Product.Product>();
+        IQueryable<Domain.Aggregates.Product.Product> productsQuery = _querySession.Query<Domain.Aggregates.Product.Product>();
 
         if (!string.IsNullOrWhiteSpace(query.Category))
         {

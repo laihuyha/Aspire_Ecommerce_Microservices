@@ -1,4 +1,5 @@
 using System;
+using AppHost;
 using AppHost.Extensions;
 using Aspire.Hosting;
 
@@ -23,7 +24,7 @@ string catalogDbName = "CatalogDb";
 string catalogDbUser = "postgres";
 string catalogDbPassword = "123456";
 string catalogRedisPort = "6379";
-var catalogConnectionString = $"Server=catalog;Port={catalogDbPort};Database={catalogDbName};User Id={catalogDbUser};Password={catalogDbPassword};Include Error Detail=true";
+var catalogConnectionString = $"Server={Service.CatalogServiceKey.GetKey()};Port={catalogDbPort};Database={catalogDbName};User Id={catalogDbUser};Password={catalogDbPassword};Include Error Detail=true";
 
 var postgresUsername = builder.AddParameter(
     "postgresDbUsername",
@@ -35,7 +36,7 @@ var postgresPassword = builder.AddParameter(
 
 var catalog = AppHostBuilderExtensions.AddPostgresDatabase(
     builder,
-    "catalog",
+    Service.CatalogServiceKey.GetKey(),
     null,
     postgresUsername,
     postgresPassword);
@@ -47,7 +48,7 @@ builder.AddRedis("redis")
         keysChangedThreshold: 100)
     .WithRedisCommander();
 
-builder.AddProject<Projects.Catalog_API>("catalog-api")
+builder.AddProject<Projects.Catalog_API>($"{Service.CatalogServiceKey.GetKey()}-api")
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
     .WithEnvironment("ConnectionStrings__CatalogDb", catalogConnectionString)
     .WithEnvironment("ConnectionStrings__Redis", $"redis:{catalogRedisPort}")

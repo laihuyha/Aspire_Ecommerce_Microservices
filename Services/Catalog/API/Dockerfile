@@ -31,16 +31,16 @@ COPY ["BuildingBlocks/", "BuildingBlocks/"]
 COPY ["Services/Catalog/", "Services/Catalog/"]
 
 WORKDIR "/src/Services/Catalog/API"
-# Build with optimizations
-RUN dotnet build "Catalog.API.csproj" -c Release -o /app/build /p:GenerateDocumentationFile=false --no-restore
+# Build with optimizations - build the API project which will build dependencies automatically
+RUN dotnet build "Catalog.API.csproj" -c Release --no-restore
 
-# Publish stage - create optimized output
+# Publish stage - create optimized output with all dependencies
 FROM build AS publish
+WORKDIR "/src/Services/Catalog/API"
 RUN dotnet publish "Catalog.API.csproj" -c Release -o /app/publish \
     /p:GenerateDocumentationFile=false \
     /p:DebugType=None \
     /p:DebugSymbols=false \
-    --no-build \
     --self-contained false
 
 # Development stage - includes dev tools and certificates
@@ -50,10 +50,12 @@ WORKDIR /app
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Generate development certificates
+# Create directory for HTTPS certificates
+RUN mkdir -p /https
+
+# Generate development certificates (trust command is not applicable in containers)
 RUN dotnet dev-certs https --clean && \
-    dotnet dev-certs https -ep /https/aspnetapp.pfx -p "devcertpass" && \
-    dotnet dev-certs https --trust
+    dotnet dev-certs https -ep /https/aspnetapp.pfx -p "devcertpass"
 
 EXPOSE 8080 8081
 
@@ -84,8 +86,8 @@ EXPOSE 8080 8081
 # Switch to non-root user for security
 USER appuser
 
-# Health check for production
+# Health check for production - check if dotnet runtime is available
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["dotnet", "--version"] || exit 1
+    CMD dotnet --version
 
 ENTRYPOINT ["dotnet", "Catalog.API.dll"]

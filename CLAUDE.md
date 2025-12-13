@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a microservices-based e-commerce platform built with .NET 9.0 and .NET Aspire. The solution follows Clean Architecture principles with CQRS pattern implementation using MediatR. Services are independently deployable, containerized, and orchestrated via .NET Aspire or Docker Compose.
+This is a microservices-based e-commerce platform currently implementing a Catalog service, built with .NET 9.0 and .NET Aspire. The solution follows Clean Architecture principles with CQRS pattern implementation using MediatR. Services are independently deployable, containerized, and orchestrated via .NET Aspire. Currently focuses on product catalog management with plans to expand to Basket and Order services.
 
 ## Build and Run Commands
 
@@ -20,28 +20,18 @@ dotnet run --project Aspire\AppHost\AppHost.csproj
 dotnet build Services\Catalog\API\Catalog.API.csproj
 ```
 
-### Using Docker Compose (Production-style)
+### Using Docker Containers (Production-style)
 ```powershell
-# Build and run all services
-docker-compose up --build
-
-# Run in detached mode
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f catalog.api
+# Note: Docker Compose configuration not yet implemented
+# Services can be containerized individually using Dockerfiles in each API project
 ```
 
 ### Running Individual Services
 ```powershell
-# Run Catalog API locally (requires PostgreSQL running)
+# Run Catalog API locally (requires PostgreSQL and Redis running)
 dotnet run --project Services\Catalog\API\Catalog.API.csproj
 
-# Run Basket API locally (requires PostgreSQL and Redis running)
-dotnet run --project Services\Basket\Basket.API\Basket.API.csproj
+# Note: Basket service not yet implemented
 ```
 
 ## Architecture
@@ -86,16 +76,11 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Current Services
 
 **Catalog Service** (Fully Implemented)
-- Product catalog management
+- Product catalog management with full CRUD operations
 - PostgreSQL + Marten for document storage
+- Redis for caching (configured but not yet used in business logic)
 - Ports: 6000 (HTTP), 6060 (HTTPS)
 - Database: PostgreSQL 16.4 on port 5432
-
-**Basket Service** (Simplified Implementation)
-- Shopping cart operations
-- PostgreSQL + Marten + Redis caching
-- Ports: 6001 (HTTP), 6061 (HTTPS)
-- Redis: port 6379, Redis Commander UI: port 7001
 
 ### Shared Components
 
@@ -123,8 +108,8 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 - **MediatR 12.5.0** - CQRS in-process messaging
 - **Mapster 7.4.0** - Object-to-object mapping
 - **Marten 8.11.0** - Document database & event store for PostgreSQL
-- **PostgreSQL 16.4** - Primary database for both services
-- **Redis** - Distributed cache (Basket service)
+- **PostgreSQL 16.4** - Primary database for Catalog service
+- **Redis** - Distributed cache (configured for future services)
 - **.NET Aspire 9.3.0+** - Cloud-native orchestration framework
 - **OpenTelemetry 1.12.0** - Observability (traces, metrics, logs)
 - **Swashbuckle** - OpenAPI/Swagger documentation
@@ -247,7 +232,6 @@ var catalog = builder.AddProject<Catalog_API>("catalog-api")
 
 **Development URLs**:
 - Catalog API: http://localhost:6000 (HTTPS: 6060)
-- Basket API: http://localhost:6001 (HTTPS: 6061)
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 - Redis Commander: http://localhost:7001 (user: root, pass: secret)

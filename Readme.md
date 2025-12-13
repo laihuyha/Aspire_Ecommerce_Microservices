@@ -1,6 +1,6 @@
 # Aspire Ecommerce Microservices
 
-A modular, production-grade microservices solution for ecommerce, built with .NET Aspire. This repository demonstrates scalable architecture, clean code principles, and modern cloud-native patterns.
+A modular, production-grade microservices solution for ecommerce, built with .NET Aspire. This repository demonstrates scalable architecture, clean code principles, CQRS pattern implementation, and modern cloud-native patterns. Currently implements a Catalog microservice with plans for expansion to Basket, Order, and other services.
 
 ---
 
@@ -9,8 +9,8 @@ A modular, production-grade microservices solution for ecommerce, built with .NE
 - [Solution Structure](#solution-structure)
 - [Getting Started](#getting-started)
 - [Architecture Overview](#architecture-overview)
-- [Microservices Breakdown](#microservices-breakdown)
-- [Technical Features](#technical-features)
+- [Microservices](#microservices)
+- [Technical Stack](#technical-stack)
 - [Development Guidelines](#development-guidelines)
 - [Extending the Platform](#extending-the-platform)
 - [Contributing](#contributing)
@@ -24,23 +24,28 @@ A modular, production-grade microservices solution for ecommerce, built with .NE
 Aspire_Ecommerce_Microservices/
 │
 ├── Aspire/
-│   ├── AppHost/                # Main entry point, orchestration, and configuration
-│   ├── ServiceDefaults/        # Shared service configuration and extensions
-│   ├── AppHost.sln             # Solution file
-│   ├── Directory.Build.props   # Centralized build settings
-│   └── Directory.Packages.props# Centralized package management
+│   ├── AppHost/                # Main orchestration and dependency management
+│   │   ├── Extensions/         # Infrastructure extension methods
+│   │   └── AppHost.cs          # Service composition and configuration
+│   ├── ServiceDefaults/        # Shared service configurations (resilience, telemetry)
+│   └── Directory.*.props       # Centralized build and package management
 │
-├── BuildingBlocks/             # Shared abstractions, interfaces, and utilities
+├── BuildingBlocks/             # Reusable components across services
+│   ├── CQRS/                   # Command/Query patterns and behaviors
+│   ├── Entity/                 # Base entities and audit functionality
+│   └── Contracts/              # Shared DTOs and contracts
 │
-└── Services/
-    ├── Catalog/                # Product catalog microservice
-    │   ├── API/                # REST API endpoints
-    │   ├── Application/        # Business logic and use cases
-    │   ├── Domain/             # Domain models and rules
-    │   ├── Infrastructure/     # Data access and integrations
-    │   └── Persistence/        # Database context and migrations
-    └── Basket/                 # Shopping basket microservice
-        └── Basket.API/         # API endpoints for basket operations
+├── Services/
+│   └── Catalog/                # Product catalog microservice (Active)
+│       ├── API/                # REST API controllers and endpoints
+│       ├── Application/        # CQRS commands/queries and handlers
+│       ├── Domain/             # Business logic and domain models
+│       ├── Infrastructure/     # External integrations and services
+│       └── Persistence/        # Database configurations (Marten)
+│
+├── db/                         # Database initialization scripts
+├── tools/                      # Development tools and utilities
+└── .env*                       # Environment configuration files
 ```
 
 ---
@@ -157,30 +162,40 @@ POSTGRES_PORT=5433
 
 ---
 
-## Microservices Breakdown
+## Microservices
 
-### Catalog Service
+### Currently Implemented
 
-- **Purpose**: Manages product catalog and inventory.
+#### Catalog Service
+
+- **Purpose**: Manages product catalog and inventory with full CRUD operations.
 - **Key Features**:
-  - Product and category management
-  - Search and filtering
-  - Brand management
+  - Product management (create, read, update, delete)
+  - Product search and filtering
+  - Brand and category support
+- **Technology**: CQRS pattern with MediatR, Marten document database, Redis caching
+- **API Endpoints**:
+  - `GET /api/products` - List all products
+  - `GET /api/products/{id}` - Get product by ID
+  - `POST /api/products` - Create new product
+  - `PUT /api/products/{id}` - Update existing product
+  - `DELETE /api/products/{id}` - Delete product
 - **Layers**:
-  - **API**: RESTful endpoints
-  - **Application**: Business logic, use cases
-  - **Domain**: Core models, rules
-  - **Infrastructure**: Data access, integrations
-  - **Persistence**: Database context and migrations
+  - **API**: RESTful controllers with request/response DTOs
+  - **Application**: CQRS commands/queries and handlers with validation
+  - **Domain**: Product aggregate with domain events
+  - **Infrastructure**: External integrations (future)
+  - **Persistence**: Marten configurations and audit interceptors
 
-### Basket Service
+### Planned Services
 
-- **Purpose**: Handles shopping cart operations.
-- **Key Features**:
-  - Shopping cart CRUD
-  - Item addition/removal
-  - Price calculation
-  - Temporary storage
+#### Basket Service (Future)
+
+- **Purpose**: Handle shopping cart operations and temporary storage.
+
+#### Order Service (Future)
+
+- **Purpose**: Process orders and manage order lifecycle.
 
 ---
 

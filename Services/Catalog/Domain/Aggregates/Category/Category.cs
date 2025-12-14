@@ -14,6 +14,7 @@ namespace Catalog.Domain.Aggregates.Category
 
         private Category(string name, string description, Guid? parentCategoryId)
         {
+            Id = Guid.NewGuid();
             Name = name;
             Description = description;
             ParentCategoryId = parentCategoryId;

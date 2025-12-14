@@ -112,6 +112,9 @@ namespace Catalog.Application.Commands
                 }
             }
 
+            // PERSISTENCE: Add product to repository before saving
+            await _unitOfWork.Repository<Product>().AddAsync(product, cancellationToken);
+
             await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
             // INTEGRATION: Publish domain event cho bounded contexts khác

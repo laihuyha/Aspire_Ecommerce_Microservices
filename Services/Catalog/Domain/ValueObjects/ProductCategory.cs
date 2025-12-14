@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Catalog.Domain.ValueObjects
 {
@@ -8,7 +9,7 @@ namespace Catalog.Domain.ValueObjects
     /// </summary>
     public class ProductCategory
     {
-        private ProductCategory() { } // For ORM/deserialization
+        public ProductCategory() { } // For ORM/deserialization
 
         public ProductCategory(Guid categoryId, string categoryName)
         {

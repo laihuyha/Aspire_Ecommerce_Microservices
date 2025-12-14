@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BuildingBlocks.Entity;
+using Catalog.Domain.Aggregates.Product.Events;
 using Catalog.Domain.Entities;
 using Catalog.Domain.ValueObjects;
 
@@ -65,7 +66,7 @@ public class Product : BaseEntity<Guid>, IAggregateRoot
         );
 
         // Raise domain event for product creation
-        // product.AddDomainEvent(new ProductCreatedDomainEvent(product.Id, product.Name));
+        product.AddDomainEvent(new ProductCreatedDomainEvent(product.Id));
 
         return product;
     }

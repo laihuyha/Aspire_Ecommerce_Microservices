@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BuildingBlocks.Entity;
+using Catalog.Domain.Aggregates.Category.Events;
 
 namespace Catalog.Domain.Aggregates.Category;
 
@@ -43,7 +44,7 @@ public class Category : BaseEntity<Guid>, IAggregateRoot
         var category = new Category(name.Trim(), description?.Trim() ?? string.Empty, null);
 
         // Raise domain event for root category creation
-        // category.AddDomainEvent(new CategoryCreatedDomainEvent(category.Id, category.Name));
+        category.AddDomainEvent(new CategoryCreatedDomainEvent(category.Id, category.Name, true));
 
         return category;
     }
@@ -56,7 +57,7 @@ public class Category : BaseEntity<Guid>, IAggregateRoot
         var category = new Category(name.Trim(), description?.Trim() ?? string.Empty, parentCategoryId);
 
         // Raise domain event for sub category creation
-        // category.AddDomainEvent(new SubCategoryCreatedDomainEvent(category.Id, category.Name, parentCategoryId));
+        category.AddDomainEvent(new CategoryCreatedDomainEvent(category.Id, category.Name, false));
 
         return category;
     }

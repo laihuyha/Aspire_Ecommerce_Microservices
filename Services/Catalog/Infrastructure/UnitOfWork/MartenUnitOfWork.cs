@@ -1,36 +1,3 @@
-/*
- * UNIT OF WORK PATTERN - MartenUnitOfWork
- *
- * WHY UNIT OF WORK (not just direct Marten session):
- * ✅ Guarantees ACID TRANSACTIONS across multiple operations
- * ✅ Repository COORDINATION (shared entity tracking)
- * ✅ CONSISTENCY checks before commit
- * ✅ DOMAIN EVENT DISPATCH after successful commits
- * ✅ PATTERN for business transactions
- *
- * WHEN TO USE UoW:
- * ✅ Multiple entity modifications in one business operation
- * ✅ Complex business workflows requiring rollback
- * ✅ Cross-aggregate operations needing coordination
- * ✅ Domain events need to be published atomically
- * ✅ When business rules span multiple entities
- *
- * WHEN NOT TO USE UoW:
- * ❌ Single read operations (use Direct Query)
- * ❌ Simple CRUD (use Repository or Direct)
- * ❌ Performance-critical paths (Direct faster)
- *
- * UOW USAGE EXAMPLES:
- * ✅ CreateOrder: Load Product + Update Stock + Create Order
- * ✅ UpdateInventory: Check availability + Update stock levels
- * ✅ ProcessCart: Validate items + Reserve stock + Create order
- *
- * KEY BENEFITS:
- * - Transaction Atomicity (all or nothing)
- * - Repository Coordination (identity map)
- * - Domain Event Consistency
- * - Business Logic Integrity
- */
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,10 +8,10 @@ using Catalog.Domain.Aggregates.Product;
 using Catalog.Domain.Entities;
 using Catalog.Domain.Interfaces;
 using Catalog.Domain.Specifications;
-using Catalog.Persistence.Repositories;
+using Catalog.Infrastructure.Repositories;
 using Marten;
 
-namespace Catalog.Persistence.UnitOfWork
+namespace Catalog.Infrastructure.UnitOfWork
 {
     /// <summary>
     ///     Marten-based Unit of Work implementation.

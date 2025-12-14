@@ -56,10 +56,8 @@ namespace Catalog.Application.Commands
         public async Task<CreateProductCommandResponse> Handle(CreateProductCommand command,
             CancellationToken cancellationToken)
         {
-            // VALIDATION: Đảm bảo SKU không trùng (business rule quan trọng)
             await ValidateNoDuplicateSkusAsync(command.Variants, cancellationToken);
 
-            // DOMAIN: Tạo Product entity với business logic
             Product product = Product.Create(
                 command.Name,
                 command.Description,
@@ -67,57 +65,47 @@ namespace Catalog.Application.Commands
                 command.BasePrice
             );
 
-            // RELATIONSHIP: Thêm categories vào product aggregate
             if (command.Categories != null && command.Categories.Any())
             {
                 foreach (var categoryInfo in command.Categories)
                 {
-                    // Domain method: validates and adds category relationship
                     product.AddCategory(categoryInfo.CategoryId, categoryInfo.CategoryName);
                 }
             }
 
-            // RELATIONSHIP: Tạo và thêm variants vào product
             if (command.Variants != null && command.Variants.Any())
             {
                 foreach (var variantInfo in command.Variants)
                 {
-                    // Tạo variant attributes từ command data
                     var variantAttributes = variantInfo.Attributes?
                         .Select(attr => ProductAttr.Create(attr.Name, attr.Value))
                         .ToList();
 
-                    // Domain factory: creates variant với business validation
                     var variant = Variant.Create(
                         variantInfo.Name,
-                        variantInfo.Sku,          // Business-critical: unique SKU
+                        variantInfo.Sku,
                         variantInfo.Price,
                         variantInfo.StockQuantity,
                         variantAttributes
                     );
 
-                    // Domain method: adds variant to product aggregate
                     product.AddVariant(variant);
                 }
             }
 
-            // RELATIONSHIP: Thêm product-level attributes
             if (command.Attributes != null && command.Attributes.Any())
             {
                 foreach (var attrInfo in command.Attributes)
                 {
                     var attribute = ProductAttr.Create(attrInfo.Name, attrInfo.Value);
-                    // Domain method: ensures no duplicate attribute names
                     product.AddAttribute(attribute);
                 }
             }
 
-            // PERSISTENCE: Add product to repository before saving
             await _unitOfWork.Repository<Product>().AddAsync(product, cancellationToken);
 
             await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
-            // INTEGRATION: Publish domain event cho bounded contexts khác
             await _mediator.Publish(new ProductCreatedDomainEvent(product.Id), cancellationToken);
 
             return new CreateProductCommandResponse(product.Id);

@@ -1,27 +1,3 @@
-/*
- * DOMAIN REPOSITORY PATTERN - ProductRepository
- *
- * WHY DOMAIN REPOSITORY (not just MartenRepository):
- * ✅ Contains PRODUCT-SPECIFIC business logic queries
- * ✅ Implements DOMAIN INTERFACES (IProductRepository)
- * ✅ Handles PRODUCT AGGREGATE complex operations
- * ✅ Uses PRODUCT SPECIFICATIONS for filtering
- *
- * WHEN TO USE THIS PATTERN:
- * - Aggregate-specific queries (variants, categories)
- * - Business logic filtering (in stock, by category)
- * - Statistical/analytics queries for domain
- * - Complex joins within aggregate boundaries
- *
- * DIFFERENCE FROM MARTEN REPO:
- * MartenRepo: Generic Add/Update/Delete for any entity
- * ProductRepo: Business-focused methods for Product domain
- *
- * EXAMPLES OF DOMAIN METHODS:
- * - GetProductWithVariantsAsync() - loads full aggregate
- * - GetProductsInStockAsync() - business rule: "in stock"
- * - SearchProductsAsync() - complex multi-criteria search
- */
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +8,7 @@ using Catalog.Domain.Interfaces;
 using Catalog.Domain.Specifications;
 using Marten;
 
-namespace Catalog.Persistence.Repositories
+namespace Catalog.Infrastructure.Repositories
 {
     /// <summary>
     ///     Product-specific repository implementation.

@@ -4,11 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a microservices-based e-commerce platform currently implementing a Catalog service, built with .NET 9.0 and .NET Aspire. The solution follows Clean Architecture principles with CQRS pattern implementation using MediatR. Services are independently deployable, containerized, and orchestrated via .NET Aspire. Currently focuses on product catalog management with plans to expand to Basket and Order services.
+This is a microservices-based e-commerce platform currently implementing a Catalog service, built with .NET 9.0 and .NET
+Aspire. The solution follows Clean Architecture principles with CQRS pattern implementation using MediatR. Services are
+independently deployable, containerized, and orchestrated via .NET Aspire. Currently focuses on product catalog
+management with plans to expand to Basket and Order services.
 
 ## Build and Run Commands
 
 ### Using .NET Aspire (Recommended for Development)
+
 ```powershell
 # Build the entire solution
 dotnet build Aspire\AppHost.sln
@@ -21,12 +25,14 @@ dotnet build Services\Catalog\API\Catalog.API.csproj
 ```
 
 ### Using Docker Containers (Production-style)
+
 ```powershell
 # Note: Docker Compose configuration not yet implemented
 # Services can be containerized individually using Dockerfiles in each API project
 ```
 
 ### Running Individual Services
+
 ```powershell
 # Run Catalog API locally (requires PostgreSQL and Redis running)
 dotnet run --project Services\Catalog\API\Catalog.API.csproj
@@ -61,6 +67,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 - **Handlers**: Process commands/queries (CreateProductCommandHandler)
 
 **Pattern Flow**:
+
 1. Controller receives HTTP request with DTO
 2. Maps DTO to Command/Query using Mapster
 3. Dispatches to MediatR via `IMediator.Send()`
@@ -68,6 +75,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 5. Returns response DTO to controller
 
 **Key Interfaces** (defined in BuildingBlocks/CQRS):
+
 - `ICommand<TResponse>` - Marker for commands
 - `IQuery<TResponse>` - Marker for queries
 - `ICommandHandler<TCommand, TResponse>` - Command processors
@@ -76,6 +84,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Current Services
 
 **Catalog Service** (Fully Implemented)
+
 - Product catalog management with full CRUD operations
 - PostgreSQL + Marten for document storage
 - Redis for caching (configured but not yet used in business logic)
@@ -85,17 +94,20 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Shared Components
 
 **BuildingBlocks** (`BuildingBlocks/BuildingBlocks/`)
+
 - CQRS interfaces and abstractions
 - Base entity with audit properties (CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
 - Shared utilities across all services
 
 **ServiceDefaults** (`Aspire/ServiceDefaults/`)
+
 - OpenTelemetry configuration (tracing, metrics, logging)
 - HTTP client resilience patterns (retry, circuit breaker, timeout)
 - Health check endpoints (`/health`, `/alive`)
 - Service discovery configuration
 
 **AppHost** (`Aspire/AppHost/`)
+
 - Service orchestration and composition
 - Infrastructure provisioning (PostgreSQL, Redis)
 - Configuration file loading from JSON
@@ -119,6 +131,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Centralized Package Management
 
 **Directory.Packages.props** - All NuGet package versions centralized
+
 - Prevents version conflicts across microservices
 - Update once, affects all projects
 - `ManagePackageVersionsCentrally` enabled
@@ -126,6 +139,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Build Configuration
 
 **Directory.Build.props** - Shared build settings:
+
 - Target Framework: `net9.0`
 - Implicit Usings: **DISABLED** (explicit `using` statements required)
 - Nullable: **DISABLED** (nullable annotations not enforced)
@@ -138,21 +152,21 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Multi-Level Configuration
 
 1. **AppHost Configuration** (`Aspire/AppHost/*.json`)
-   - `catalog-config.Development.json` - Catalog API settings
-   - `basket-config.Development.json` - Basket API settings
-   - `postgres-config.Development.json` - PostgreSQL config
-   - `redis-config.Development.json` - Redis config
+    - `catalog-config.Development.json` - Catalog API settings
+    - `basket-config.Development.json` - Basket API settings
+    - `postgres-config.Development.json` - PostgreSQL config
+    - `redis-config.Development.json` - Redis config
 
 2. **Service Configuration** (`Services/{Service}/API/appsettings.*.json`)
-   - `appsettings.json` - Production defaults
-   - `appsettings.Development.json` - Development overrides
-   - Connection strings, logging, service-specific settings
+    - `appsettings.json` - Production defaults
+    - `appsettings.Development.json` - Development overrides
+    - Connection strings, logging, service-specific settings
 
 3. **Environment Variables** (Docker/Aspire)
-   - `ASPNETCORE_ENVIRONMENT` - Development/Production
-   - `ASPNETCORE_HTTP_PORTS` - HTTP port binding
-   - `ConnectionStrings__Database` - Database connection
-   - `ConnectionStrings__Redis` - Redis connection
+    - `ASPNETCORE_ENVIRONMENT` - Development/Production
+    - `ASPNETCORE_HTTP_PORTS` - HTTP port binding
+    - `ConnectionStrings__Database` - Database connection
+    - `ConnectionStrings__Redis` - Redis connection
 
 ## Adding New Features
 
@@ -203,6 +217,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### Modifying Database Configuration
 
 **For Marten (PostgreSQL Document Store)**:
+
 - Modify Program.cs in API project
 - Update connection string in appsettings.Development.json
 - Marten auto-creates schema on first run (no migrations needed)
@@ -212,6 +227,7 @@ The codebase uses **Command Query Responsibility Segregation** with MediatR:
 ### .NET Aspire Orchestration
 
 AppHost orchestrates infrastructure using type-safe C# API:
+
 ```csharp
 var postgres = builder.AddPostgres("catalog")
     .WithEndpoint(port: 5433)
@@ -223,6 +239,7 @@ var catalog = builder.AddProject<Catalog_API>("catalog-api")
 ```
 
 **Benefits over Docker Compose**:
+
 - Type-safe service composition
 - Automatic service discovery
 - Configuration from JSON files
@@ -231,18 +248,21 @@ var catalog = builder.AddProject<Catalog_API>("catalog-api")
 ### Service Endpoints
 
 **Development URLs**:
+
 - Catalog API: http://localhost:6000 (HTTPS: 6060)
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 - Redis Commander: http://localhost:7001 (user: root, pass: secret)
 
 **Health Checks**:
+
 - `/health` - Detailed health status
 - `/alive` - Simple liveness probe
 
 ### Docker Configuration
 
 **Multi-stage Dockerfile** (Services/Catalog/API/Dockerfile):
+
 - Build stage: Layer-by-layer NuGet restore for caching
 - Runtime stage: ASP.NET Core 9.0 slim image
 - HTTPS certificate setup for development
@@ -251,7 +271,9 @@ var catalog = builder.AddProject<Catalog_API>("catalog-api")
 ## Code Patterns and Conventions
 
 ### Explicit Usings Required
+
 Always include explicit `using` statements (ImplicitUsings disabled):
+
 ```csharp
 using System;
 using Microsoft.AspNetCore.Mvc;
@@ -259,7 +281,9 @@ using MediatR;
 ```
 
 ### Domain Entities
+
 Inherit from `BaseEntity` in BuildingBlocks:
+
 ```csharp
 public class Product : BaseEntity<Guid>
 {
@@ -271,14 +295,18 @@ public class Product : BaseEntity<Guid>
 BaseEntity provides: `Id`, `CreatedAt`, `CreatedBy`, `UpdatedAt`, `UpdatedBy`
 
 ### MediatR Registration
+
 In Program.cs:
+
 ```csharp
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(AssemblyReference).Assembly));
 ```
 
 ### Mapster for Mapping
+
 Prefer Mapster over AutoMapper:
+
 ```csharp
 var command = request.Adapt<CreateProductCommand>();
 var response = entity.Adapt<ProductResponse>();
@@ -287,23 +315,29 @@ var response = entity.Adapt<ProductResponse>();
 ## Important Notes
 
 ### No Inter-Service Communication Yet
+
 Services are currently independent with no synchronous or asynchronous communication between them. When implementing:
+
 - Use HTTP with resilience patterns (already configured in ServiceDefaults)
 - Service discovery is enabled for endpoint resolution
 - Consider message queue for async communication
 
 ### Code Quality Enforcement
+
 - **All warnings are errors** - Code must be warning-free
 - Code analysis runs on build with all rules enabled
 - Documentation comments enforced (suppress 1591 for now)
 
 ### Database Approach
+
 - **Marten** abstracts PostgreSQL as document database
 - No traditional migrations - schema auto-created
 - Event sourcing capabilities available but not currently used
 
 ### Observability
+
 All services have OpenTelemetry configured:
+
 - Distributed tracing across service calls
 - Metrics collection (ASP.NET Core, HTTP, Runtime)
 - Structured logging with correlation IDs
@@ -312,6 +346,7 @@ All services have OpenTelemetry configured:
 ## Recent Changes
 
 Based on git history:
+
 - **Latest**: Dockerized Catalog services with multi-stage builds
 - **CQRS Implementation**: Implemented command/query pattern with MediatR
 - **Feature Folders**: Reorganized code into feature-based structure

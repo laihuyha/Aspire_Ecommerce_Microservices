@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Domain\Catalog.Domain.csproj" />
-    <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Domain\Catalog.Domain.csproj"/>
+        <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Marten" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Marten"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+    </ItemGroup>
 
 </Project>

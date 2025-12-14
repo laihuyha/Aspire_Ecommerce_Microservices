@@ -1,0 +1,206 @@
+/*
+ * UNIT OF WORK PATTERN - MartenUnitOfWork
+ *
+ * WHY UNIT OF WORK (not just direct Marten session):
+ * ✅ Guarantees ACID TRANSACTIONS across multiple operations
+ * ✅ Repository COORDINATION (shared entity tracking)
+ * ✅ CONSISTENCY checks before commit
+ * ✅ DOMAIN EVENT DISPATCH after successful commits
+ * ✅ PATTERN for business transactions
+ *
+ * WHEN TO USE UoW:
+ * ✅ Multiple entity modifications in one business operation
+ * ✅ Complex business workflows requiring rollback
+ * ✅ Cross-aggregate operations needing coordination
+ * ✅ Domain events need to be published atomically
+ * ✅ When business rules span multiple entities
+ *
+ * WHEN NOT TO USE UoW:
+ * ❌ Single read operations (use Direct Query)
+ * ❌ Simple CRUD (use Repository or Direct)
+ * ❌ Performance-critical paths (Direct faster)
+ *
+ * UOW USAGE EXAMPLES:
+ * ✅ CreateOrder: Load Product + Update Stock + Create Order
+ * ✅ UpdateInventory: Check availability + Update stock levels
+ * ✅ ProcessCart: Validate items + Reserve stock + Create order
+ *
+ * KEY BENEFITS:
+ * - Transaction Atomicity (all or nothing)
+ * - Repository Coordination (identity map)
+ * - Domain Event Consistency
+ * - Business Logic Integrity
+ */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Catalog.Domain.Aggregates.Product;
+using Catalog.Domain.Entities;
+using Catalog.Domain.Interfaces;
+using Catalog.Domain.Specifications;
+using Catalog.Persistence.Repositories;
+using Marten;
+
+namespace Catalog.Persistence.UnitOfWork
+{
+    /// <summary>
+    ///     Marten-based Unit of Work implementation.
+    /// </summary>
+    public class MartenUnitOfWork : IUnitOfWork
+    {
+        private readonly IDocumentSession _documentSession;
+
+        // Repository cache
+        private readonly Dictionary<Type, object> _repositories = new();
+        private bool _disposed;
+
+        // Specific repositories
+        private ProductRepository _productRepository;
+
+        public MartenUnitOfWork(IDocumentSession documentSession)
+        {
+            _documentSession = documentSession ?? throw new ArgumentNullException(nameof(documentSession));
+        }
+
+        public IRepository<T> Repository<T>() where T : class
+        {
+            Type type = typeof(T);
+
+            if (!_repositories.TryGetValue(type, out object value))
+            {
+                Type repositoryType = typeof(MartenRepository<>).MakeGenericType(type);
+                value = Activator.CreateInstance(repositoryType, _documentSession);
+                _repositories[type] = value;
+            }
+
+            return (IRepository<T>)value;
+        }
+
+        public IProductRepository Products
+        {
+            get
+            {
+                if (_productRepository == null)
+                {
+                    _productRepository = new ProductRepository(_documentSession);
+                }
+
+                return _productRepository;
+            }
+        }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            await _documentSession.SaveChangesAsync(cancellationToken);
+            return 1; // Marten doesn't return count like EF Core
+        }
+
+        public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
+        {
+            await _documentSession.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        public async Task<T> GetSingleBySpecAsync<T>(ISpecification<T> specification,
+            CancellationToken cancellationToken = default) where T : class
+        {
+            IQueryable<T> query = _documentSession.Query<T>();
+            query = MartenSpecificationEvaluator.GetQuery(query, specification);
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<List<T>> GetListBySpecAsync<T>(ISpecification<T> specification,
+            CancellationToken cancellationToken = default) where T : class
+        {
+            IQueryable<T> query = _documentSession.Query<T>();
+            query = MartenSpecificationEvaluator.GetQuery(query, specification);
+            return (List<T>)await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task<PaginatedResult<T>> GetPaginatedBySpecAsync<T>(ISpecification<T> specification,
+            int pageNumber, int pageSize, CancellationToken cancellationToken = default) where T : class
+        {
+            // Calculate skip based on page
+            int skip = (pageNumber - 1) * pageSize;
+
+            // Create a specification for pagination
+            PaginatedSpecification<T> paginatedSpec = new(specification.Criteria, skip, pageSize);
+
+            // Apply ordering from original specification
+            if (specification.OrderBy != null)
+            {
+                paginatedSpec.ApplyOrderBy(specification.OrderBy);
+            }
+
+            // Get total count without paging
+            int totalCount = await CountAsync(specification, cancellationToken);
+
+            // Get paged results
+            List<T> items = await GetListBySpecAsync(paginatedSpec, cancellationToken);
+
+            return new PaginatedResult<T>(items, totalCount, pageNumber, pageSize);
+        }
+
+        public async Task<int> CountAsync<T>(ISpecification<T> specification,
+            CancellationToken cancellationToken = default) where T : class
+        {
+            IQueryable<T> query = _documentSession.Query<T>();
+            query = MartenSpecificationEvaluator.GetQuery(query, specification);
+            return await query.CountAsync(cancellationToken);
+        }
+
+        public async Task<T> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : class
+        {
+            return await _documentSession.LoadAsync<T>(id, cancellationToken);
+        }
+
+        public async Task<List<T>> GetAllAsync<T>(CancellationToken cancellationToken = default) where T : class
+        {
+            return (List<T>)await _documentSession.Query<T>().ToListAsync(cancellationToken);
+        }
+
+        public async Task<Product> GetProductWithVariantsAsync(Guid productId,
+            CancellationToken cancellationToken = default)
+        {
+            return await Products.GetProductWithVariantsAsync(productId, cancellationToken);
+        }
+
+        public async Task UpdateProductVariantsAsync(Product product, CancellationToken cancellationToken = default)
+        {
+            _documentSession.Store(product);
+            await _documentSession.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<Variant> GetVariantWithDetailsAsync(Guid variantId,
+            CancellationToken cancellationToken = default)
+        {
+            // Since Variant doesn't have its own repository, query directly
+            return await _documentSession.LoadAsync<Variant>(variantId, cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _documentSession?.Dispose();
+                _disposed = true;
+            }
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
+    ///     Helper specification for pagination.
+    /// </summary>
+    internal sealed class PaginatedSpecification<T> : BaseSpecification<T>
+    {
+        public PaginatedSpecification(Expression<Func<T, bool>> criteria, int skip, int take) : base(criteria)
+        {
+            AddPaging(skip, take);
+        }
+    }
+}

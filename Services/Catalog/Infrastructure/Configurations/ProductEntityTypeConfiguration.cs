@@ -1,47 +1,37 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Linq;
 using Catalog.Domain.Aggregates.Product;
+using Catalog.Domain.ValueObjects;
+using Marten;
 
-namespace Catalog.Infrastructure.Configurations;
-
-/// <summary>
-/// Configuration for Product entity in EF Core.
-/// </summary>
-public class ProductEntityTypeConfiguration : IEntityTypeConfiguration<Product>
+namespace Catalog.Infrastructure.Configurations
 {
-    public void Configure(EntityTypeBuilder<Product> builder)
+    /// <summary>
+    ///     Configuration for Product document in Marten.
+    /// </summary>
+    public class ProductEntityTypeConfiguration : MartenRegistry
     {
-        builder.ToTable("Products");
+        public ProductEntityTypeConfiguration()
+        {
+            For<Product>()
+                .Identity(x => x.Id)
+                // Basic indexes for better query performance
+                .Duplicate(x => x.Name)           // Full-text index for searching
+                .Index(x => x.CreatedAt)          // Time-based queries
+                .Index(x => x.Name)               // Name-based queries
 
-        builder.HasKey(p => p.Id);
+                // Configure search indexes for embedded collections
+                // Marten will handle these through GIN indexes for JSON data
 
-        builder.Property(p => p.Name)
-            .IsRequired()
-            .HasMaxLength(200);
+                // Configure optimistic concurrency for safe updates
+                .UseOptimisticConcurrency(true)
 
-        builder.Property(p => p.Description)
-            .HasMaxLength(1000);
-
-        builder.Property(p => p.ImageUrl)
-            .HasMaxLength(500);
-
-        builder.Property(p => p.Price)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
-
-        builder.Property(p => p.CreatedAt)
-            .IsRequired();
-
-        builder.Property(p => p.UpdatedAt);
-
-        builder.Property(p => p.CreatedBy)
-            .HasMaxLength(100);
-
-        builder.Property(p => p.UpdatedBy)
-            .HasMaxLength(100);
-
-        // Categories are automatically handled as a collection by EF Core
-        // If you want to store them in JSON format, uncomment:
-        // builder.Property(p => p.Categories).HasJsonConversion();
+                // Enable document versioning/metadata
+                .Metadata(md =>
+                {
+                    md.Revision.Enabled = true;
+                    md.CausationId.Enabled = true;
+                    md.CorrelationId.Enabled = true;
+                });
+        }
     }
 }

@@ -2,27 +2,33 @@
 
 ## 1. Overview
 
-This is a microservices-based e-commerce platform built with **.NET Aspire**, **DDD (Domain-Driven Design)**, and **Clean Architecture** principles. The project follows CQRS pattern using MediatR, with each service implementing a layered architecture. Currently implements a Catalog service, with plans for Basket and Order services.
+This is a microservices-based e-commerce platform built with **.NET Aspire**, **DDD (Domain-Driven Design)**, and *
+*Clean Architecture** principles. The project follows CQRS pattern using MediatR, with each service implementing a
+layered architecture. Currently implements a Catalog service, with plans for Basket and Order services.
 
-Application layer handles commands/queries, Domain holds business logic, Infrastructure implements persistence and integrations using Marten (document database on PostgreSQL).
+Application layer handles commands/queries, Domain holds business logic, Infrastructure implements persistence and
+integrations using Marten (document database on PostgreSQL).
 
 ------------------------------------------------------------------------
 
 ## 2. Application Layer Summary
 
-Contains coordinators of domain logic for each microservice: - Commands / Queries with MediatR - Handlers - Request/Response DTOs - Validation using FluentValidation - Interfaces - Mappings using Mapster
+Contains coordinators of domain logic for each microservice: - Commands / Queries with MediatR - Handlers -
+Request/Response DTOs - Validation using FluentValidation - Interfaces - Mappings using Mapster
 
 ------------------------------------------------------------------------
 
 ## 3. Domain Layer Summary
 
-Contains core business rules for each microservice: - Aggregates - Entities - Value Objects - Domain Events - Domain Services - Specifications (future)
+Contains core business rules for each microservice: - Aggregates - Entities - Value Objects - Domain Events - Domain
+Services - Specifications (future)
 
 ------------------------------------------------------------------------
 
 ## 4. Infrastructure Layer Summary
 
-Implements technical details for each microservice: - Marten document database configuration - Audit interceptors - Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External API clients - Cache (Redis)
+Implements technical details for each microservice: - Marten document database configuration - Audit interceptors -
+Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External API clients - Cache (Redis)
 
 ------------------------------------------------------------------------
 
@@ -77,22 +83,26 @@ Implements technical details for each microservice: - Marten document database c
 ## 6. Current Implementation Status
 
 ### Implemented Services
+
 - **Catalog Service**: Full CRUD product management with CQRS
-  - API: RESTful endpoints with Swagger
-  - Application: MediatR commands/queries
-  - Domain: Product aggregate with domain events
-  - Persistence: Marten document storage
+    - API: RESTful endpoints with Swagger
+    - Application: MediatR commands/queries
+    - Domain: Product aggregate with domain events
+    - Persistence: Marten document storage
 
 ### Planned Services
+
 - **Basket Service**: Shopping cart operations
 - **Order Service**: Order processing and lifecycle
 
 ### Cross-Cutting Concerns (BuildingBlocks)
+
 - CQRS abstractions
 - Base entity with audit fields
 - Shared contracts (DTOs, events)
 
 ### Infrastructure (.NET Aspire)
+
 - AppHost orchestration
 - PostgreSQL database
 - Redis cache
@@ -101,4 +111,5 @@ Implements technical details for each microservice: - Marten document database c
 
 ------------------------------------------------------------------------
 
-This file serves as your portable "architecture blueprint" for the Aspire Ecommerce Microservices project. Follow these patterns when adding new services or features.
+This file serves as your portable "architecture blueprint" for the Aspire Ecommerce Microservices project. Follow these
+patterns when adding new services or features.

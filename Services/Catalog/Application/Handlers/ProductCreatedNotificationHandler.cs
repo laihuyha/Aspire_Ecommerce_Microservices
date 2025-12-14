@@ -5,39 +5,38 @@ using Catalog.Domain.Aggregates.Product.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Catalog.Application.Handlers;
-
-internal static class Log
+namespace Catalog.Application.Handlers
 {
-    internal static readonly Action<ILogger, Guid, DateTime, Exception> _productCreated =
-        LoggerMessage.Define<Guid, DateTime>(
-            LogLevel.Information,
-            new EventId(1, "ProductCreated"),
-            "Product created with ID: {ProductId} at {OccurredOn}");
-}
-
-/// <summary>
-/// Handler for ProductCreatedDomainEvent.
-/// Performs side effects like logging, notifications, etc.
-/// </summary>
-public class ProductCreatedNotificationHandler : INotificationHandler<ProductCreatedDomainEvent>
-{
-    private readonly ILogger<ProductCreatedNotificationHandler> _logger;
-
-    public ProductCreatedNotificationHandler(ILogger<ProductCreatedNotificationHandler> logger)
+    internal static class Log
     {
-        _logger = logger;
+        internal static readonly Action<ILogger, Guid, DateTime, Exception> ProductCreated =
+            LoggerMessage.Define<Guid, DateTime>(
+                LogLevel.Information,
+                new EventId(1, "ProductCreated"),
+                "Product created with ID: {ProductId} at {OccurredOn}");
     }
 
-    public Task Handle(ProductCreatedDomainEvent notification, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Handler for ProductCreatedDomainEvent.
+    ///     Performs side effects like logging, notifications, etc.
+    /// </summary>
+    public class ProductCreatedNotificationHandler : INotificationHandler<ProductCreatedDomainEvent>
     {
-#pragma warning disable CA1848 // For improved performance, use the LoggerMessage delegates instead of calling 'LoggerExtensions.LogInformation'
-        Log._productCreated(_logger, notification.ProductId, notification.OccurredOn, null);
-#pragma warning restore CA1848
+        private readonly ILogger<ProductCreatedNotificationHandler> _logger;
 
-        // TODO: Send notification, update cache, trigger integrations, etc.
-        // e.g., await _emailService.SendProductCreatedNotification(notification.ProductId);
+        public ProductCreatedNotificationHandler(ILogger<ProductCreatedNotificationHandler> logger)
+        {
+            _logger = logger;
+        }
 
-        return Task.CompletedTask;
+        public Task Handle(ProductCreatedDomainEvent notification, CancellationToken cancellationToken)
+        {
+            Log.ProductCreated(_logger, notification.ProductId, notification.OccurredOn, null);
+
+            // TODO: Send notification, update cache, trigger integrations, etc.
+            // e.g., await _emailService.SendProductCreatedNotification(notification.ProductId);
+
+            return Task.CompletedTask;
+        }
     }
 }

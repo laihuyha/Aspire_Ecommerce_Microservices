@@ -4,45 +4,43 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 
-namespace Catalog.Api.Filters;
-
-/// <summary>
-/// Global exception filter for handling unexpected errors globally.
-/// Returns standardized error responses.
-/// </summary>
-public class GlobalExceptionFilter : IExceptionFilter
+namespace Catalog.Api.Filters
 {
-    private readonly ILogger<GlobalExceptionFilter> _logger;
-
-    private static readonly Action<ILogger, string, Exception> _unhandledExceptionLogged =
-        LoggerMessage.Define<string>(
-            LogLevel.Error,
-            new EventId(1, "UnhandledException"),
-            "Unhandled exception occurred while processing {RequestPath}");
-
-    public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
+    /// <summary>
+    ///     Global exception filter for handling unexpected errors globally.
+    ///     Returns standardized error responses.
+    /// </summary>
+    public class GlobalExceptionFilter : IExceptionFilter
     {
-        _logger = logger;
-    }
+        private static readonly Action<ILogger, string, Exception> _unhandledExceptionLogged =
+            LoggerMessage.Define<string>(
+                LogLevel.Error,
+                new EventId(1, "UnhandledException"),
+                "Unhandled exception occurred while processing {RequestPath}");
 
-    public void OnException(ExceptionContext context)
-    {
-        _unhandledExceptionLogged(_logger, context.HttpContext.Request.Path.Value ?? "unknown", context.Exception);
+        private readonly ILogger<GlobalExceptionFilter> _logger;
 
-        var response = new
+        public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
         {
-            Type = "https://tools.ietf.org/html/rfc9110",
-            Title = "An error occurred while processing your request.",
-            Status = StatusCodes.Status500InternalServerError,
-            Detail = "Internal server error.",
-            Instance = context.HttpContext.Request.Path
-        };
+            _logger = logger;
+        }
 
-        context.Result = new ObjectResult(response)
+        public void OnException(ExceptionContext context)
         {
-            StatusCode = StatusCodes.Status500InternalServerError
-        };
+            _unhandledExceptionLogged(_logger, context.HttpContext.Request.Path.Value ?? "unknown", context.Exception);
 
-        context.ExceptionHandled = true;
+            var response = new
+            {
+                Type = "https://tools.ietf.org/html/rfc9110",
+                Title = "An error occurred while processing your request.",
+                Status = StatusCodes.Status500InternalServerError,
+                Detail = "Internal server error.",
+                Instance = context.HttpContext.Request.Path
+            };
+
+            context.Result = new ObjectResult(response) { StatusCode = StatusCodes.Status500InternalServerError };
+
+            context.ExceptionHandled = true;
+        }
     }
 }

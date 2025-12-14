@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
@@ -11,10 +10,9 @@ namespace Catalog.Application.Commands.Product;
 
 public record CreateProductCommand(
     string Name,
-    List<string> Categories,
     string Description,
     string ImageUrl,
-    decimal Price) : ICommand<CreateProductCommandResponse>;
+    decimal? BasePrice) : ICommand<CreateProductCommandResponse>;
 
 public record CreateProductCommandResponse(Guid ProductId);
 
@@ -33,15 +31,10 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
     {
         var product = Domain.Aggregates.Product.Product.Create(
             command.Name,
-            command.Price,
             command.Description,
-            command.ImageUrl
+            command.ImageUrl,
+            command.BasePrice
         );
-
-        foreach (var category in command.Categories ?? [])
-        {
-            product.AddCategory(category);
-        }
 
         _document.Store(product);
         await _document.SaveChangesAsync(cancellationToken);

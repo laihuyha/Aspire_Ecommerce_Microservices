@@ -85,10 +85,9 @@ public class ProductController : BaseApiController
         var command = new UpdateProductCommand(
             id,
             product.Name,
-            product.Categories,
             product.Description,
             product.ImageUrl,
-            product.Price);
+            product.BasePrice);
         await _mediator.Send(command, cancellationToken);
         return NoContent();
     }

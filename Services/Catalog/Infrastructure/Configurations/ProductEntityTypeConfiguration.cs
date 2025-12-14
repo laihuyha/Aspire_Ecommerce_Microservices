@@ -25,9 +25,8 @@ public class ProductEntityTypeConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.ImageUrl)
             .HasMaxLength(500);
 
-        builder.Property(p => p.Price)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
+        builder.Property(p => p.BasePrice)
+            .HasColumnType("decimal(18,2)");
 
         builder.Property(p => p.CreatedAt)
             .IsRequired();

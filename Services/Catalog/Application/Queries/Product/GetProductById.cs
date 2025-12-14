@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
@@ -12,10 +13,28 @@ public record GetProductByIdQuery(Guid Id) : IQuery<GetProductByIdQueryResponse>
 public record GetProductByIdQueryResponse(
     Guid Id,
     string Name,
-    IReadOnlyList<string> Categories,
+    IReadOnlyList<CategoryDto> Categories,
+    IList<VariantDto> Variants,
+    IList<ProductAttributeDto> Attributes,
     string Description,
     string ImageUrl,
-    decimal Price);
+    decimal? BasePrice,
+    decimal EffectivePrice,
+    bool IsInStock,
+    int TotalStockQuantity);
+
+public record VariantDto(
+    Guid VariantId,
+    string Name,
+    string SKU,
+    decimal Price,
+    int StockQuantity,
+    bool IsActive,
+    IList<ProductAttributeDto> Attributes);
+
+public record ProductAttributeDto(
+    string Name,
+    string Value);
 
 public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, GetProductByIdQueryResponse>
 {
@@ -38,10 +57,23 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Get
         return new GetProductByIdQueryResponse(
             product.Id,
             product.Name,
-            product.Categories,
+            product.Categories.Select(c => new CategoryDto(c.CategoryId, c.CategoryName)).ToList(),
+            product.Variants.Select(v => new VariantDto(
+                v.Id,
+                v.Name,
+                v.SKU,
+                v.Price,
+                v.StockQuantity,
+                v.IsActive,
+                v.Attributes.Select(a => new ProductAttributeDto(a.Name, a.Value)).ToList()
+            )).ToList(),
+            product.Attributes.Select(a => new ProductAttributeDto(a.Name, a.Value)).ToList(),
             product.Description,
             product.ImageUrl,
-            product.Price);
+            product.BasePrice,
+            product.GetEffectivePrice(),
+            product.IsInStock(),
+            product.GetTotalStockQuantity());
     }
 }
 

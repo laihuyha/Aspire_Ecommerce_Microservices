@@ -29,13 +29,10 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
             .Must(BeValidUrl)
             .WithMessage("ImageUrl must be a valid URL.");
 
-        RuleFor(x => x.Price)
-            .GreaterThan(0)
-            .WithMessage("Price must be greater than zero.");
-
-        RuleFor(x => x.Categories)
-            .NotNull()
-            .WithMessage("Categories are required.");
+        RuleFor(x => x.BasePrice)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.BasePrice.HasValue)
+            .WithMessage("Base price must be greater than or equal to zero.");
     }
 
     private static bool BeValidUrl(string url)

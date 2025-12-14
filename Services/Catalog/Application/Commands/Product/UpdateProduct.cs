@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
@@ -11,10 +10,9 @@ namespace Catalog.Application.Commands.Product;
 public record UpdateProductCommand(
     Guid Id,
     string Name,
-    List<string> Categories,
     string Description,
     string ImageUrl,
-    decimal Price) : ICommand<UpdateProductCommandResponse>;
+    decimal? BasePrice) : ICommand<UpdateProductCommandResponse>;
 
 public record UpdateProductCommandResponse(bool Success);
 
@@ -36,14 +34,8 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
             throw new ProductNotFoundException(command.Id);
         }
 
-        product.UpdateDetails(command.Name, command.Description, command.ImageUrl);
-        product.UpdatePrice(command.Price);
-
-        // Clear and re-add categories
-        foreach (var category in command.Categories ?? new List<string>())
-        {
-            product.AddCategory(category);
-        }
+        product.UpdateBasicInfo(command.Name, command.Description, command.ImageUrl);
+        product.SetBasePrice(command.BasePrice);
 
         _documentSession.Store(product);
         await _documentSession.SaveChangesAsync(cancellationToken);

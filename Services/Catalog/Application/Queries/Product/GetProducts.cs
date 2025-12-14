@@ -22,10 +22,16 @@ public record GetProductsQueryResponse(
 public record ProductDto(
     Guid Id,
     string Name,
-    IReadOnlyList<string> Categories,
+    IReadOnlyList<CategoryDto> Categories,
     string Description,
     string ImageUrl,
-    decimal Price);
+    decimal EffectivePrice,
+    bool IsInStock,
+    int TotalStockQuantity);
+
+public record CategoryDto(
+    Guid CategoryId,
+    string CategoryName);
 
 public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, GetProductsQueryResponse>
 {
@@ -52,7 +58,7 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, GetProduc
 
         if (!string.IsNullOrWhiteSpace(query.Category))
         {
-            productsQuery = productsQuery.Where(p => p.Categories.Contains(query.Category));
+            productsQuery = productsQuery.Where(p => p.Categories.Any(c => c.CategoryName.Contains(query.Category)));
         }
 
         var totalCount = await productsQuery.CountAsync(cancellationToken);
@@ -65,10 +71,12 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, GetProduc
         var productDtos = products.Select(p => new ProductDto(
             p.Id,
             p.Name,
-            p.Categories,
+            p.Categories.Select(c => new CategoryDto(c.CategoryId, c.CategoryName)).ToList(),
             p.Description,
             p.ImageUrl,
-            p.Price)).ToList();
+            p.GetEffectivePrice(),
+            p.IsInStock(),
+            p.GetTotalStockQuantity())).ToList();
 
         return new GetProductsQueryResponse(productDtos, totalCount, query.PageNumber, query.PageSize);
     }

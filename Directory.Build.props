@@ -10,7 +10,7 @@
 		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<NoWarn>$(NoWarn);1591</NoWarn> <!-- Optional: suppress missing XML comment warnings -->
+		<NoWarn>$(NoWarn);1591,1711</NoWarn> <!-- Suppress missing XML comment and 'Attribute suffix warnings -->
 	</PropertyGroup>
 
 </Project>

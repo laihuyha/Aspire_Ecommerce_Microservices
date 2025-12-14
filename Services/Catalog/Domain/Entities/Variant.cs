@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using BuildingBlocks.Entity;
 using BuildingBlocks.Errors;
@@ -17,10 +18,11 @@ namespace Catalog.Domain.Entities
         // Note: ProductId is removed since Variant exists only within Product aggregate
         // Its relationship to Product is implicit through containment
 
-        private Variant() { } // For ORM
+        public Variant() { } // For ORM
 
         private Variant(string name, string sku, decimal price, int stockQuantity)
         {
+            Id = Guid.NewGuid();
             Name = name;
             SKU = sku;
             Price = price;

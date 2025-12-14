@@ -42,8 +42,7 @@ Aspire_Ecommerce_Microservices/
 │       ├── API/                # REST API controllers and endpoints
 │       ├── Application/        # CQRS commands/queries and handlers
 │       ├── Domain/             # Business logic and domain models
-│       ├── Infrastructure/     # External integrations and services
-│       └── Persistence/        # Database configurations (Marten)
+│       └── Infrastructure/     # Database, repositories, external services
 │
 ├── db/                         # Database initialization scripts
 ├── tools/                      # Development tools and utilities

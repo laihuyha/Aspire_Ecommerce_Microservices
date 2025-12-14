@@ -8,7 +8,7 @@ using Catalog.Domain.Interfaces;
 using Catalog.Domain.Specifications;
 using Marten;
 
-namespace Catalog.Persistence.Repositories
+namespace Catalog.Infrastructure.Repositories
 {
     /// <summary>
     ///     Generic repository implementation using Marten.

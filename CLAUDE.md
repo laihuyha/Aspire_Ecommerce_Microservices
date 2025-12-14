@@ -51,12 +51,35 @@ Services/{ServiceName}/
 ├── API/                 # REST endpoints, controllers, DTOs, responses
 ├── Application/         # CQRS commands/queries, handlers, business logic
 ├── Domain/             # Domain entities, value objects, domain logic
-├── Infrastructure/     # Service implementations, external integrations
-└── Persistence/        # Database configurations (Marten setup)
+└── Infrastructure/     # Service implementations, external integrations (Marten, Repos)
 ```
 
-**Dependency Flow**: API → Application → Domain (outer to inner)
-**Cross-cutting**: Infrastructure depends on Application for interfaces
+### Clean Architecture Dependency Flow
+
+**✅ CURRENT Dependencies:**
+```
+API → Application + Infrastructure
+Application → Domain + Infrastructure + BuildingBlocks
+Infrastructure → Domain + BuildingBlocks
+Domain → BuildingBlocks
+BuildingBlocks → (no dependencies)
+```
+
+**❌ FORBIDDEN Dependencies:**
+```
+Domain → Application (inversion via interfaces defined in Domain)
+Infrastructure → API (data flows outward, dependencies inward)
+API → Domain (must go through Application layer)
+```
+
+**Current Project Flow:**
+```
+Catalog.API → Catalog.Application + Catalog.Infrastructure
+Catalog.Application → Catalog.Domain + Catalog.Infrastructure + BuildingBlocks
+Catalog.Infrastructure → Catalog.Domain + BuildingBlocks
+Catalog.Domain → BuildingBlocks
+BuildingBlocks → (independent)
+```
 
 ### CQRS Pattern Implementation
 

@@ -1,43 +1,3 @@
-/*
- * SPECIFICATION PATTERN - Product Specifications
- *
- * CURRENT STATE ANALYSIS:
- * ✅ Tốt: Specification pattern separated business logic from queries
- * ✅ Tốt: Reusable criteria definitions
- * ⚠️ NGUYÊN: ProductSearchSpecification quá phức tạp với CombineCriteria
- * ⚠️ NGUYÊN: Expression tree manipulation khó debug và maintain
- *
- * PROBLEMS WITH CURRENT COMBINE CRITERIA:
- * - Expression.AndAlso phức tạp không cần thiết
- * - Hard to debug runtime errors
- * - Difficult to test individual conditions
- * - Performance overhead khi build expressions
- *
- * BETTER APPROACH - SIMPLIFY TO LINQ PREDICATES:
- *
- * RECOMMENDED REFACTOR:
- * public class ProductSearchSpecification : BaseSpecification<Product>
- * {
- *     public ProductSearchSpecification(...) : base()
- *     {
- *         var query = _session.Query<Product>();
- *
- *         if (!string.IsNullOrEmpty(searchTerm))
- *             query = query.Where(p =>
- *                 p.Name.Contains(searchTerm) ||
- *                 p.Description.Contains(searchTerm));
- *
- *         if (categoryId.HasValue)
- *             query = query.Where(p =>
- *                 p.Categories.Any(c => c.CategoryId == categoryId));
- *
- *         // ... more filters
- *
- *         // Apply to specification
- *         ApplyCriteria(BuildCriteria(...));
- *     }
- * }
- */
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -182,8 +142,6 @@ namespace Catalog.Domain.Specifications
             Expression<Func<Product, bool>> left,
             Expression<Func<Product, bool>> right)
         {
-            // FIXME: Replace with LINQ predicates for maintainability
-            // Combine two expressions with AND
             return Expression.Lambda<Func<Product, bool>>(
                 Expression.AndAlso(left.Body, right.Body),
                 left.Parameters[0]);

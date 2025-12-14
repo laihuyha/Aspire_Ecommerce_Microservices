@@ -8,7 +8,7 @@ using Aspire.Hosting.ApplicationModel;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-IResourceBuilder<PostgresDatabaseResource> catalogDb = builder.AddCatalogDatabase("catalogDb-dev");
+IResourceBuilder<PostgresDatabaseResource> catalogDb = builder.AddCatalogDatabase("Database");
 IResourceBuilder<RedisResource> catalogCache = builder.AddCatalogCache();
 
 AllowedHostsValidator.ValidateAllServices(Constants.ServicesPath);

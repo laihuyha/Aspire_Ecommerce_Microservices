@@ -6,10 +6,11 @@
 
     <ItemGroup>
         <PackageReference Include="Swashbuckle.AspNetCore"/>
+        <PackageReference Include="Mapster"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Persistence\Catalog.Persistence.csproj"/>
+        <ProjectReference Include="..\Application\Catalog.Application.csproj"/>
         <ProjectReference Include="..\Infrastructure\Catalog.Infrastructure.csproj"/>
     </ItemGroup>
 

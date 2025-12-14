@@ -65,7 +65,6 @@ namespace Catalog.Api.Controllers
             CreateProductRequest product,
             CancellationToken cancellationToken)
         {
-            // TODO: Get category names from IDs - for now creating placeholder CategoryInfo
             var categories = product.Categories?.Select(id =>
                     new Catalog.Application.Commands.CategoryInfo(id, $"Category-{id.ToString()[..8]}"))
                 .ToList();

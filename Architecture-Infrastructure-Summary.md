@@ -32,6 +32,81 @@ Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External A
 
 ------------------------------------------------------------------------
 
+## 4. Dependency Flow (Clean Architecture)
+
+```
+Aspire/AppHost/             # Orchestrates all services
+├── Services/               # Business Microservices
+│
+BuildingBlocks/            # SHARED CROSS-CUTTING CODE
+│
+Aspire_Ecommerce_Microservices/
+│
+├── API (Presentation Layer)
+│   ├── Controllers/       # Thin controllers, handle HTTP
+│   ├── DTOs/              # Request/Response models
+│   ├── Program.cs         # Service entry point
+│   └── Middleware/        # Cross-cutting concerns
+│
+├── Application (Use Cases Layer)
+│   ├── Commands/          # Write operations (CQRS)
+│   ├── Queries/           # Read operations (CQRS)
+│   ├── Handlers/          # Command/Query handlers
+│   ├── Validators/        # FluentValidation rules
+│   └── Specifications/    # Business query rules
+│
+├── Domain (Business Logic Layer)
+│   ├── Aggregates/        # Aggregate roots
+│   ├── Entities/          # Domain entities
+│   ├── ValueObjects/      # Value objects
+│   ├── Events/            # Domain events
+│   └── Interfaces/        # Repository contracts
+│
+├── Infrastructure (External Concerns Layer)
+│   ├── Configurations/    # Database configurations
+│   ├── Repositories/      # Data access implementations
+│   ├── Services/          # External service integrations
+│   └── UnitOfWork/        # Transaction management
+│
+└── BuildingBlocks (Cross-Cutting Abstractions)
+    ├── CQRS/             # Command/Query interfaces
+    ├── Entity/           # Base entity patterns
+    ├── Errors/           # Exception handling
+    ├── Logging/          # Structured logging
+    └── Behaviors/        # MediatR pipeline behaviors
+```
+
+### Clean Architecture Dependency Rules
+
+**✅ ALLOWED Dependencies:**
+```
+API → Application + Infrastructure
+Application → Domain + Infrastructure + BuildingBlocks
+Infrastructure → Domain + BuildingBlocks
+Domain → BuildingBlocks
+BuildingBlocks → (no dependencies)
+```
+
+**❌ FORBIDDEN Dependencies:**
+```
+Domain → Application (inversion via interfaces in Domain)
+Infrastructure → API (data flows outward, dependencies inward)
+API → Domain (bypass Application layer)
+Application → Infrastructure (via contracts, not direct coupling)
+```
+
+### Current Project Flow
+
+```
+Catalog.API → Catalog.Application + Catalog.Infrastructure
+Catalog.Application → Catalog.Domain + Catalog.Infrastructure + BuildingBlocks
+Catalog.Infrastructure → Catalog.Domain + BuildingBlocks
+Catalog.Domain → BuildingBlocks
+BuildingBlocks → (independent)
+```
+
+------------------------------------------------------------------------
+
 ## 5. Full Directory Structure (DDD + Clean Architecture)
 
     Aspire_Ecommerce_Microservices/
@@ -68,11 +143,10 @@ Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External A
      │       │   │           └── ProductCreatedDomainEvent.cs
      │       │   └── Common/             # Shared domain concepts
      │       │
-     │       ├── Infrastructure/
-     │       │   └── (future)            # External integrations
-     │       │
-     │       └── Persistence/
-     │           └── (Marten config)     # Database setup
+     │       └── Infrastructure/
+     │           ├── Configurations/     # Marten entity configs
+     │           ├── Repositories/       # Repository implementations
+     │           └── UnitOfWork/         # Transaction management
      │
      ├── db/                             # Database scripts/init
      ├── tools/                          # Development tools

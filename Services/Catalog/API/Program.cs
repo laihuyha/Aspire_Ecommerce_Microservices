@@ -1,3 +1,4 @@
+using BuildingBlocks.Middlewares;
 using Catalog.Api.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,9 @@ builder.AddServiceDefaults();
 builder.Services.AddCatalogServices(builder);
 
 WebApplication app = builder.Build();
+
+// Correlation ID middleware
+app.UseCorrelationId();
 
 app.MapDefaultEndpoints();
 

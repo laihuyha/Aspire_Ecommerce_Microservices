@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using BuildingBlocks.Entity;
 using BuildingBlocks.Errors;
@@ -12,7 +13,7 @@ namespace Catalog.Domain.ValueObjects
     /// </summary>
     public class ProductAttr : ValueObject
     {
-        private ProductAttr() { } // For ORM/deserialization
+        public ProductAttr() { } // For ORM/deserialization
 
         private ProductAttr(string name, string value)
         {

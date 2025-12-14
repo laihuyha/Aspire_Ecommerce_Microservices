@@ -33,8 +33,6 @@ namespace Catalog.Application.Handlers
         {
             Log.ProductCreated(_logger, notification.ProductId, notification.OccurredOn, null);
 
-            // TODO: Send notification, update cache, trigger integrations, etc.
-            // e.g., await _emailService.SendProductCreatedNotification(notification.ProductId);
 
             return Task.CompletedTask;
         }

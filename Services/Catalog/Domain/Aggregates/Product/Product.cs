@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using BuildingBlocks.Entity;
 using BuildingBlocks.Errors;
 using Catalog.Domain.Aggregates.Product.Events;
@@ -16,27 +17,31 @@ namespace Catalog.Domain.Aggregates.Product
         private readonly List<ProductCategory> _categories = new();
         private readonly List<Variant> _variants = new();
 
-        private Product() { } // For ORM
-
-        private Product(string name, string description, string imageUrl, decimal? basePrice)
+        // For JSON deserialization (Marten)
+        public Product()
         {
+        }
+
+        public Product(string name, string description, string imageUrl, decimal? basePrice)
+        {
+            Id = Guid.NewGuid();
             Name = name;
             Description = description;
             ImageUrl = imageUrl;
             BasePrice = basePrice;
         }
 
-        public string Name { get; private set; }
-        public string Description { get; private set; }
-        public string ImageUrl { get; private set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string ImageUrl { get; set; }
 
         // Product properties (base price - variants may override)
-        public decimal? BasePrice { get; private set; }
+        public decimal? BasePrice { get; set; }
 
-        // Relationships
-        public IReadOnlyCollection<ProductCategory> Categories => _categories.AsReadOnly();
-        public IReadOnlyCollection<ProductAttr> Attributes => _attributes.AsReadOnly();
-        public IReadOnlyCollection<Variant> Variants => _variants.AsReadOnly();
+        // Relationships - exposed for JSON deserialization
+        public List<ProductCategory> Categories { get; set; } = new();
+        public List<ProductAttr> Attributes { get; set; } = new();
+        public List<Variant> Variants { get; set; } = new();
 
         public static Product Create(string name, string description = "", string imageUrl = "",
             decimal? basePrice = null)

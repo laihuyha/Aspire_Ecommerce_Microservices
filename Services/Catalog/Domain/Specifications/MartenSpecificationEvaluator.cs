@@ -1,49 +1,53 @@
+using System;
 using System.Linq;
+using System.Linq.Expressions;
 
-namespace Catalog.Domain.Specifications;
-
-/// <summary>
-/// Evaluates specifications against Marten queries.
-/// </summary>
-public static class MartenSpecificationEvaluator
+namespace Catalog.Domain.Specifications
 {
-    public static IQueryable<T> GetQuery<T>(IQueryable<T> inputQuery, ISpecification<T> specification) where T : class
+    /// <summary>
+    ///     Evaluates specifications against Marten queries.
+    /// </summary>
+    public static class MartenSpecificationEvaluator
     {
-        var query = inputQuery;
-
-        // Apply criteria (where clause)
-        if (specification.Criteria != null)
+        public static IQueryable<T> GetQuery<T>(IQueryable<T> inputQuery, ISpecification<T> specification)
+            where T : class
         {
-            query = query.Where(specification.Criteria);
-        }
+            IQueryable<T> query = inputQuery;
 
-        // Apply ordering
-        if (specification.OrderBy != null)
-        {
-            query = query.OrderBy(specification.OrderBy);
-        }
-        else if (specification.OrderByDescending != null)
-        {
-            query = query.OrderByDescending(specification.OrderByDescending);
-        }
+            // Apply criteria (where clause)
+            if (specification.Criteria != null)
+            {
+                query = query.Where(specification.Criteria);
+            }
 
-        // Apply then by ordering
-        foreach (var thenBy in specification.ThenBy)
-        {
-            query = ((IOrderedQueryable<T>)query).ThenBy(thenBy);
-        }
+            // Apply ordering
+            if (specification.OrderBy != null)
+            {
+                query = query.OrderBy(specification.OrderBy);
+            }
+            else if (specification.OrderByDescending != null)
+            {
+                query = query.OrderByDescending(specification.OrderByDescending);
+            }
 
-        foreach (var thenByDesc in specification.ThenByDescending)
-        {
-            query = ((IOrderedQueryable<T>)query).ThenByDescending(thenByDesc);
-        }
+            // Apply then by ordering
+            foreach (Expression<Func<T, object>> thenBy in specification.ThenBy)
+            {
+                query = ((IOrderedQueryable<T>)query).ThenBy(thenBy);
+            }
 
-        // Apply paging
-        if (specification.IsPagingEnabled)
-        {
-            query = query.Skip(specification.Skip).Take(specification.Take);
-        }
+            foreach (Expression<Func<T, object>> thenByDesc in specification.ThenByDescending)
+            {
+                query = ((IOrderedQueryable<T>)query).ThenByDescending(thenByDesc);
+            }
 
-        return query;
+            // Apply paging
+            if (specification.IsPagingEnabled)
+            {
+                query = query.Skip(specification.Skip).Take(specification.Take);
+            }
+
+            return query;
+        }
     }
 }

@@ -1,34 +1,38 @@
 ﻿<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-  <ItemGroup>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
 
-    <!-- #region Aspire Hosting Packages Region -->
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.2" />
-    <PackageVersion Include="Aspire.Hosting.Docker" Version="9.4.2-preview.1.25428.12" />
-    <PackageVersion Include="Aspire.Hosting.MongoDB" Version="9.4.2" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.2" />
-    <PackageVersion Include="Aspire.Hosting.Redis" Version="9.4.2" />
+        <!-- #region Aspire Hosting Packages Region -->
+        <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.2"/>
+        <PackageVersion Include="Aspire.Hosting.Docker" Version="9.4.2-preview.1.25428.12"/>
+        <PackageVersion Include="Aspire.Hosting.MongoDB" Version="9.4.2"/>
+        <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.2"/>
+        <PackageVersion Include="Aspire.Hosting.Redis" Version="9.4.2"/>
 
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.3.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
-    <!-- #endregion -->
+        <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0"/>
+        <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.3.0"/>
+        <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0"/>
+        <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0"/>
+        <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0"/>
+        <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0"/>
+        <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0"/>
+        <!-- #endregion -->
 
-    <!-- #region Services Package Region -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
-    <PackageVersion Include="Mapster" Version="7.4.0" />
-    <PackageVersion Include="MediatR" Version="12.5.0" />
-    <PackageVersion Include="Marten" Version="8.11.0" />
-    <!-- #endregion -->
-  </ItemGroup>
+        <!-- #region Services Package Region -->
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5"/>
+        <PackageVersion Include="FluentValidation" Version="12.1.1"/>
+        <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1"/>
+        <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
+        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.10"/>
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.4"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4"/>
+        <PackageVersion Include="Mapster" Version="7.4.0"/>
+        <PackageVersion Include="MediatR" Version="12.5.0"/>
+        <PackageVersion Include="Marten" Version="8.11.0"/>
+        <!-- #endregion -->
+
+    </ItemGroup>
 </Project>

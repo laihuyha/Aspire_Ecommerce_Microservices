@@ -1,5 +1,7 @@
 using MediatR;
 
-namespace BuildingBlocks.CQRS;
-
-public interface IQueryHandler<in TQuery, TResponse> : IRequestHandler<TQuery, TResponse> where TQuery : IQuery<TResponse> where TResponse : notnull;
+namespace BuildingBlocks.CQRS
+{
+    public interface IQueryHandler<in TQuery, TResponse> : IRequestHandler<TQuery, TResponse>
+        where TQuery : IQuery<TResponse> where TResponse : notnull;
+}

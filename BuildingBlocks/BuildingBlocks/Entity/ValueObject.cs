@@ -1,55 +1,61 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BuildingBlocks.Entity;
-
-/// <summary>
-/// Base class for value objects.
-/// Value objects are immutable and compared by value, not identity.
-/// </summary>
-public abstract class ValueObject
+namespace BuildingBlocks.Entity
 {
     /// <summary>
-    /// Gets the atomic values that define the value object.
-    /// Used for equality comparison and hashing.
+    ///     Base class for value objects.
+    ///     Value objects are immutable and compared by value, not identity.
     /// </summary>
-    protected abstract IEnumerable<object> GetEqualityComponents();
-
-    public override bool Equals(object obj)
+    public abstract class ValueObject
     {
-        if (obj == null || obj.GetType() != GetType())
-            return false;
+        /// <summary>
+        ///     Gets the atomic values that define the value object.
+        ///     Used for equality comparison and hashing.
+        /// </summary>
+        protected abstract IEnumerable<object> GetEqualityComponents();
 
-        var other = (ValueObject)obj;
-        return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
-    }
-
-    public override int GetHashCode()
-    {
-        return GetEqualityComponents()
-            .Aggregate(1, (current, obj) =>
+        public override bool Equals(object obj)
+        {
+            if (obj == null || obj.GetType() != GetType())
             {
-                unchecked
+                return false;
+            }
+
+            ValueObject other = (ValueObject)obj;
+            return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
+        }
+
+        public override int GetHashCode()
+        {
+            return GetEqualityComponents()
+                .Aggregate(1, (current, obj) =>
                 {
-                    return current * 23 + (obj?.GetHashCode() ?? 0);
-                }
-            });
-    }
+                    unchecked
+                    {
+                        return (current * 23) + (obj?.GetHashCode() ?? 0);
+                    }
+                });
+        }
 
-    public static bool operator ==(ValueObject left, ValueObject right)
-    {
-        if (ReferenceEquals(left, null) && ReferenceEquals(right, null))
-            return true;
+        public static bool operator ==(ValueObject left, ValueObject right)
+        {
+            if (ReferenceEquals(left, null) && ReferenceEquals(right, null))
+            {
+                return true;
+            }
 
-        if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
-            return false;
+            if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
+            {
+                return false;
+            }
 
-        return left.Equals(right);
-    }
+            return left.Equals(right);
+        }
 
-    public static bool operator !=(ValueObject left, ValueObject right)
-    {
-        return !(left == right);
+        public static bool operator !=(ValueObject left, ValueObject right)
+        {
+            return !(left == right);
+        }
     }
 }

@@ -1,13 +1,18 @@
-using System;
 using AppHost;
+using AppHost.PathConstants;
+using AppHost.Utils;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 // AppHost - Microservices orchestration with .NET Aspire
 
-var builder = DistributedApplication.CreateBuilder(args);
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-var catalogDb = builder.AddCatalogDatabase("catalogDb");
-var catalogCache = builder.AddCatalogCache();
-var catalogApi = builder.AddCatalogApi("catalog", catalogCache, catalogDb);
+IResourceBuilder<PostgresDatabaseResource> catalogDb = builder.AddCatalogDatabase("catalogDb-dev");
+IResourceBuilder<RedisResource> catalogCache = builder.AddCatalogCache();
+
+AllowedHostsValidator.ValidateAllServices(Constants.ServicesPath);
+
+IResourceBuilder<ProjectResource> catalogApi = builder.AddCatalogApi("catalog", catalogCache, catalogDb);
 
 builder.Build().Run();

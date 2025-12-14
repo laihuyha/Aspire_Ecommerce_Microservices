@@ -2,114 +2,115 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace Catalog.Domain.Specifications;
-
-/// <summary>
-/// Base implementation of the specification pattern.
-/// </summary>
-public abstract class BaseSpecification<T> : ISpecification<T>
+namespace Catalog.Domain.Specifications
 {
-    public Expression<Func<T, bool>> Criteria { get; private set; }
-    public List<Expression<Func<T, object>>> Includes { get; } = new();
-    public List<string> IncludeStrings { get; } = new();
-    public Expression<Func<T, object>> OrderBy { get; private set; }
-    public Expression<Func<T, object>> OrderByDescending { get; private set; }
-    public List<Expression<Func<T, object>>> ThenBy { get; } = new();
-    public List<Expression<Func<T, object>>> ThenByDescending { get; } = new();
-
-    public int Take { get; private set; }
-    public int Skip { get; private set; }
-    public bool IsPagingEnabled { get; private set; }
-    public bool IsTrackingEnabled { get; private set; } = true;
-
-    protected BaseSpecification()
+    /// <summary>
+    ///     Base implementation of the specification pattern.
+    /// </summary>
+    public abstract class BaseSpecification<T> : ISpecification<T>
     {
-        // Default to tracking enabled
-        IsTrackingEnabled = true;
-    }
+        protected BaseSpecification()
+        {
+            // Default to tracking enabled
+            IsTrackingEnabled = true;
+        }
 
-    protected BaseSpecification(Expression<Func<T, bool>> criteria) : this()
-    {
-        Criteria = criteria;
-    }
+        protected BaseSpecification(Expression<Func<T, bool>> criteria) : this()
+        {
+            Criteria = criteria;
+        }
 
-    protected void AddInclude(Expression<Func<T, object>> includeExpression)
-    {
-        Includes.Add(includeExpression);
-    }
+        public Expression<Func<T, bool>> Criteria { get; private set; }
+        public List<Expression<Func<T, object>>> Includes { get; } = new();
+        public List<string> IncludeStrings { get; } = new();
+        public Expression<Func<T, object>> OrderBy { get; private set; }
+        public Expression<Func<T, object>> OrderByDescending { get; private set; }
+        public List<Expression<Func<T, object>>> ThenBy { get; } = new();
+        public List<Expression<Func<T, object>>> ThenByDescending { get; } = new();
 
-    protected void AddInclude(string includeString)
-    {
-        IncludeStrings.Add(includeString);
-    }
+        public int Take { get; private set; }
+        public int Skip { get; private set; }
+        public bool IsPagingEnabled { get; private set; }
+        public bool IsTrackingEnabled { get; private set; } = true;
 
-    protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
-    {
-        OrderBy = orderByExpression;
-    }
+        // Public interface methods
+        public void ApplyCriteria(Expression<Func<T, bool>> criteria)
+        {
+            Criteria = criteria;
+        }
 
-    protected void AddOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
-    {
-        OrderByDescending = orderByDescendingExpression;
-    }
+        public void ApplyInclude(Expression<Func<T, object>> includeExpression)
+        {
+            Includes.Add(includeExpression);
+        }
 
-    protected void AddThenBy(Expression<Func<T, object>> thenByExpression)
-    {
-        ThenBy.Add(thenByExpression);
-    }
+        public void ApplyInclude(string includeString)
+        {
+            IncludeStrings.Add(includeString);
+        }
 
-    protected void AddThenByDescending(Expression<Func<T, object>> thenByDescendingExpression)
-    {
-        ThenByDescending.Add(thenByDescendingExpression);
-    }
+        public void ApplyOrderBy(Expression<Func<T, object>> orderByExpression)
+        {
+            OrderBy = orderByExpression;
+        }
 
-    protected void AddPaging(int skip, int take)
-    {
-        Skip = skip;
-        Take = take;
-        IsPagingEnabled = true;
-    }
+        public void ApplyThenBy(Expression<Func<T, object>> thenByExpression)
+        {
+            ThenBy.Add(thenByExpression);
+        }
 
-    // Public interface methods
-    public void ApplyCriteria(Expression<Func<T, bool>> criteria)
-    {
-        Criteria = criteria;
-    }
+        public void ApplyPaging(int skip, int take)
+        {
+            Skip = skip;
+            Take = take;
+            IsPagingEnabled = true;
+        }
 
-    public void ApplyInclude(Expression<Func<T, object>> includeExpression)
-    {
-        Includes.Add(includeExpression);
-    }
+        public void ApplyTracking(bool tracking)
+        {
+            IsTrackingEnabled = tracking;
+        }
 
-    public void ApplyInclude(string includeString)
-    {
-        IncludeStrings.Add(includeString);
-    }
+        protected void AddInclude(Expression<Func<T, object>> includeExpression)
+        {
+            Includes.Add(includeExpression);
+        }
 
-    public void ApplyOrderBy(Expression<Func<T, object>> orderByExpression)
-    {
-        OrderBy = orderByExpression;
-    }
+        protected void AddInclude(string includeString)
+        {
+            IncludeStrings.Add(includeString);
+        }
 
-    public void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
-    {
-        OrderByDescending = orderByDescendingExpression;
-    }
+        protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
+        {
+            OrderBy = orderByExpression;
+        }
 
-    public void ApplyThenBy(Expression<Func<T, object>> thenByExpression)
-    {
-        ThenBy.Add(thenByExpression);
-    }
+        protected void AddOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
+        {
+            OrderByDescending = orderByDescendingExpression;
+        }
 
-    public void ApplyPaging(int skip, int take)
-    {
-        Skip = skip;
-        Take = take;
-        IsPagingEnabled = true;
-    }
+        protected void AddThenBy(Expression<Func<T, object>> thenByExpression)
+        {
+            ThenBy.Add(thenByExpression);
+        }
 
-    public void ApplyTracking(bool tracking)
-    {
-        IsTrackingEnabled = tracking;
+        protected void AddThenByDescending(Expression<Func<T, object>> thenByDescendingExpression)
+        {
+            ThenByDescending.Add(thenByDescendingExpression);
+        }
+
+        protected void AddPaging(int skip, int take)
+        {
+            Skip = skip;
+            Take = take;
+            IsPagingEnabled = true;
+        }
+
+        public void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
+        {
+            OrderByDescending = orderByDescendingExpression;
+        }
     }
 }

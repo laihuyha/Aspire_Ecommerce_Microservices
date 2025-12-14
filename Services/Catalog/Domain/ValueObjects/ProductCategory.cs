@@ -1,39 +1,42 @@
 using System;
 
-namespace Catalog.Domain.ValueObjects;
-
-/// <summary>
-/// Represents the relationship data between Product and Category.
-/// This is a simple data structure for the many-to-many relationship.
-/// </summary>
-public class ProductCategory
+namespace Catalog.Domain.ValueObjects
 {
-    public Guid CategoryId { get; private set; }
-    public string CategoryName { get; private set; }
-
-    private ProductCategory() { } // For ORM/deserialization
-
-    public ProductCategory(Guid categoryId, string categoryName)
+    /// <summary>
+    ///     Represents the relationship data between Product and Category.
+    ///     This is a simple data structure for the many-to-many relationship.
+    /// </summary>
+    public class ProductCategory
     {
-        CategoryId = categoryId;
-        CategoryName = categoryName;
-    }
+        private ProductCategory() { } // For ORM/deserialization
 
-    public override bool Equals(object obj)
-    {
-        if (obj is not ProductCategory other)
-            return false;
+        public ProductCategory(Guid categoryId, string categoryName)
+        {
+            CategoryId = categoryId;
+            CategoryName = categoryName;
+        }
 
-        return CategoryId == other.CategoryId;
-    }
+        public Guid CategoryId { get; }
+        public string CategoryName { get; }
 
-    public override int GetHashCode()
-    {
-        return CategoryId.GetHashCode();
-    }
+        public override bool Equals(object obj)
+        {
+            if (obj is not ProductCategory other)
+            {
+                return false;
+            }
 
-    public override string ToString()
-    {
-        return CategoryName;
+            return CategoryId == other.CategoryId;
+        }
+
+        public override int GetHashCode()
+        {
+            return CategoryId.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return CategoryName;
+        }
     }
 }

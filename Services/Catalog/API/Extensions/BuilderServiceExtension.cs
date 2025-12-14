@@ -1,4 +1,3 @@
-using System.Reflection;
 using BuildingBlocks.CQRS.Behaviors;
 using Catalog.Api.Filters;
 using Catalog.Domain.Aggregates.Product;
@@ -43,27 +42,36 @@ public static class BuilderServiceExtension
             });
         });
 
-        // MediatR configuration with all behaviors
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(Assembly.Load("Catalog.Application"));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ErrorHandlingBehavior<,>));
-        });
+        // Register all Application layer services (includes domain, infrastructure, repositories, etc.)
+        services.AddApplicationServices(builder.Configuration);
 
-        // Marten configuration
+        return services;
+    }
+
+    private static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Register MediatR from Application assembly
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Catalog.Application.Commands.CreateProductCommand).Assembly));
+
+        // Register pipeline behaviors from BuildingBlocks
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ErrorHandlingBehavior<,>));
+
+        // Register Marten configuration
         services.AddSingleton<MartenRegistry, ProductEntityTypeConfiguration>();
+
+        // Add Marten with database configuration
         services.AddMarten(options =>
         {
-            options.Connection(builder.Configuration.GetConnectionString("Database"));
+            options.Connection(configuration.GetConnectionString("Database")!);
             options.RegisterDocumentType<Product>();
         }).UseLightweightSessions();
 
-        // Infrastructure/Persistence services registration
-        services.AddScoped<IUnitOfWork, MartenUnitOfWork>();
+        // Register repositories and unit of work
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IUnitOfWork, MartenUnitOfWork>();
 
         return services;
     }

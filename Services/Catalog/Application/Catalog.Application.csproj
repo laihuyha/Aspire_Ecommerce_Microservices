@@ -2,12 +2,12 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Domain\Catalog.Domain.csproj"/>
+        <ProjectReference Include="..\Infrastructure\Catalog.Infrastructure.csproj"/>
         <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Marten"/>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+        <PackageReference Include="MediatR"/>
     </ItemGroup>
 
 </Project>

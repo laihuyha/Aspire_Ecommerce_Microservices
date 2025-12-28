@@ -32,18 +32,31 @@ Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External A
 
 ------------------------------------------------------------------------
 
-## 4. Dependency Flow (Clean Architecture + Infrastructure Extensions)
+## 4. Dependency Flow (Clean Architecture + Service Definition Pattern)
 
 ```
 Aspire/AppHost/                          # Service orchestration
-├── Extensions/                          # Infrastructure setup
-│   ├── InfrastructureExtensions.cs      # Reusable infrastructure (databases)
-│   └── CatalogServiceExtensions.cs      # Service-specific components
+├── Abstractions/                        # Core interfaces and base classes
+│   ├── IServiceDefinition.cs            # Service registration contract
+│   ├── IInfrastructureFactory.cs        # Infrastructure factory interface
+│   └── ServiceDefinitionBase.cs         # Common service configuration logic
+├── Infrastructure/                      # Shared infrastructure
+│   └── InfrastructureFactory.cs         # Singleton factory (DB/Cache)
+├── Services/                            # Service definitions
+│   ├── CatalogServiceDefinition.cs      # Catalog service implementation
+│   └── ServiceRegistry.cs               # Central service registry
+├── Extensions/                          # Fluent API extensions
+│   ├── DistributedApplicationBuilderExtensions.cs  # WithDefaultConfiguration, WithServices
+│   └── ServiceRegistrationExtensions.cs # Individual service registration
 ├── Utils/                               # Configuration helpers
-│   ├── ServiceConfigurationHelper.cs    # Option extraction
-│   └── ConfigurationMerger.cs          # Service config merging
+│   ├── ServiceConfigurationHelper.cs    # Option extraction with validation
+│   └── ConfigurationMerger.cs           # Service config merging
 ├── Options/                             # Configuration models
-└── AppHost.cs                           # Pure orchestration (9 lines)
+│   ├── ServicePortOptions.cs            # Unified port configuration
+│   ├── HttpsCertificateOptions.cs       # HTTPS certificate config
+│   ├── DatabaseOptions.cs               # Database configuration
+│   └── CacheOptions.cs                  # Cache configuration
+└── AppHost.cs                           # Clean entry point with fluent API
 
 Services/                               # Business Microservices
 ├── Catalog/                            # Currently implemented service
@@ -117,8 +130,13 @@ BuildingBlocks → (independent)
     Aspire_Ecommerce_Microservices/
      ├── Aspire/
      │   ├── AppHost/
-     │   │   ├── AppHost.cs              # Service orchestration
-     │   │   ├── Extensions/              # Infrastructure setup
+     │   │   ├── AppHost.cs               # Clean entry point (fluent API)
+     │   │   ├── Abstractions/            # IServiceDefinition, ServiceDefinitionBase
+     │   │   ├── Infrastructure/          # InfrastructureFactory (singleton)
+     │   │   ├── Services/                # Service definitions & registry
+     │   │   ├── Extensions/              # Fluent API extensions
+     │   │   ├── Options/                 # Configuration classes
+     │   │   ├── Utils/                   # Helpers & validators
      │   │   └── *.json                   # Configuration files
      │   └── ServiceDefaults/             # Shared configurations
      │
@@ -182,9 +200,15 @@ BuildingBlocks → (independent)
 
 ### Infrastructure (.NET Aspire)
 
-- AppHost orchestration
-- PostgreSQL database
-- Redis cache
+- AppHost orchestration with Service Definition pattern
+- Design Patterns used:
+  - **Registry Pattern**: ServiceRegistry for managing services
+  - **Factory Pattern**: InfrastructureFactory for DB/Cache resources
+  - **Template Method**: ServiceDefinitionBase for common configuration
+  - **Fluent Interface**: Extension methods for configuration
+- PostgreSQL database (Marten document store)
+- Redis cache with persistence
+- HTTPS certificate auto-configuration
 - Service discovery
 - Health checks with OpenTelemetry
 

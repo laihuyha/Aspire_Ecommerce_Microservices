@@ -1,128 +1,144 @@
-# 🔐 .NET Aspire HTTPS Certificate Setup Guide
+# HTTPS Certificate Setup Guide
 
 ## Overview
 
-This guide describes how to set up production-like HTTPS for .NET Aspire microservices running in Docker containers, using a self-signed certificate with full Subject Alternative Names (SAN).
+This guide describes how to set up production-like HTTPS for .NET Aspire microservices running in Docker containers.
 
-## 🎯 Solution
+## Quick Setup
 
-### 1. **Bash Script: `tools/generate-aspire-cert.sh`**
+### Option 1: Using dotnet dev-certs (Recommended for Development)
 
-The script automatically:
-- ✅ Creates RSA 4096-bit certificate with SHA256
-- ✅ 10-year validity
-- ✅ Full SAN for all services
-- ✅ Exports to PFX format
-- ✅ Automatically copies to all API projects
+```powershell
+# Create certs directory
+mkdir certs
 
-```bash
-# Make script executable (one-time setup)
-chmod +x tools/generate-aspire-cert.sh
+# Generate and export certificate
+dotnet dev-certs https --export-path certs/aspnetapp.pfx --password 'AspireSecure2024!' --trust
 
-# Run script to generate certificate
-./tools/generate-aspire-cert.sh
-
-# Alternative: Run with bash explicitly
-bash tools/generate-aspire-cert.sh
-```
-
-**Note**: This script requires OpenSSL to be installed on your system.
-- **macOS**: `brew install openssl`
-- **Ubuntu/Debian**: `sudo apt update && sudo apt install openssl`
-- **Windows**: Use Git Bash or WSL with OpenSSL installed
-
-### 2. **Certificate Configuration in Service Extensions**
-
-Certificates are configured automatically in service extension methods:
-
-#### CatalogServiceExtensions.cs
-```csharp
-// Aspire/AppHost/Extensions/CatalogServiceExtensions.cs
-.PublishAsDockerComposeService((resource, service) =>
-{
-    service.Name = $"{serviceName}-api";
-    service.Environment["HTTP_PORTS"] = apiOptions.InternalHttpPort.ToString();
-    service.Environment["HTTPS_PORTS"] = apiOptions.InternalHttpsPort.ToString();
-
-    // 🔐 HTTPS Certificate Configuration for Docker
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = "/app/aspnetapp.pfx";
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = httpsCertOptions.CertificatePassword;
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = httpsCertOptions.AllowInvalid.ToString().ToLowerInvariant();
-})
-.WithBakedInHttpsCertificate(httpsCertOptions);
-```
-
-### 3. **Usage Example for Multiple Services**
-
-```csharp
-// In AppHost.cs - Catalog API (already configured in InfrastructureExtensions)
-var catalogApi = builder.AddCatalogApi("catalog", cache, catalogDb);
-
-// Order API
-var orderApi = builder.AddProject<Order_API>("order-api")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithReference(orderDb)
-    .WithHttpEndpoint(7000, 8080, "order-http")
-    .WithHttpsEndpoint(7443, 8443, "order-https")
-    .PublishAsDockerComposeService((resource, service) =>
-    {
-        service.Name = "order-api";
-        service.Environment["HTTP_PORTS"] = "8080";
-        service.Environment["HTTPS_PORTS"] = "8443";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = "/app/certs/aspnetapp.pfx";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = "AspireSecure2024!";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = "true";
-    });
-
-// Basket API
-var basketApi = builder.AddProject<Basket_API>("basket-api")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithReference(cache)
-    .WithHttpEndpoint(8000, 8080, "basket-http")
-    .WithHttpsEndpoint(8443, 8443, "basket-https")
-    .PublishAsDockerComposeService((resource, service) =>
-    {
-        service.Name = "basket-api";
-        service.Environment["HTTP_PORTS"] = "8080";
-        service.Environment["HTTPS_PORTS"] = "8443";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = "/app/certs/aspnetapp.pfx";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = "AspireSecure2024!";
-        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = "true";
-    });
-```
-
-## 🚀 **Deployment Steps**
-
-```bash
-# 1. Make script executable and generate certificates
-chmod +x tools/generate-aspire-cert.sh
-./tools/generate-aspire-cert.sh
-
-# 2. Build services (certificates automatically copied via Directory.Build.props)
+# Build to copy certificate to output
 dotnet build
-
-# 3. Deploy with Aspire
-dotnet run --project Aspire/AppHost -- deploy -o ./manifests
-
-# 4. Run docker-compose
-docker-compose -f ./manifests/docker-compose.yml up -d
 ```
 
-## ⚠️ **Handling Untrusted Certificate Warnings**
+### Option 2: Using OpenSSL Script
 
-### **For Browser Testing:**
+```bash
+# Make script executable
+chmod +x tools/generate-aspire-cert.sh
+
+# Run script
+./tools/generate-aspire-cert.sh
+```
+
+## How It Works
+
+### 1. Certificate Configuration in Service Definition
+
+Certificates are automatically configured in `ServiceDefinitionBase.ConfigureForDocker()`:
+
+```csharp
+protected IResourceBuilder<ProjectResource> ConfigureForDocker(
+    IResourceBuilder<ProjectResource> projectBuilder,
+    ServicePortOptions portOptions,
+    HttpsCertificateOptions certOptions)
+{
+    return projectBuilder.PublishAsDockerComposeService((resource, service) =>
+    {
+        service.Environment["HTTP_PORTS"] = portOptions.InternalHttpPort.ToString();
+        service.Environment["HTTPS_PORTS"] = portOptions.InternalHttpsPort.ToString();
+
+        // HTTPS certificate configuration
+        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = certOptions.CertificatePath;
+        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = certOptions.CertificatePassword;
+        service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = certOptions.AllowInvalid.ToString().ToLowerInvariant();
+    });
+}
+```
+
+### 2. Certificate Copy in .csproj
+
+Each service's `.csproj` includes a target to copy the certificate:
+
+```xml
+<!-- Copy HTTPS certificates to output for Docker deployment -->
+<ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="certs\aspnetapp.pfx"/>
+</ItemGroup>
+```
+
+### 3. Certificate Options Class
+
+```csharp
+public sealed class HttpsCertificateOptions
+{
+    public string CertificatePath { get; set; } = "/app/certs/aspnetapp.pfx";
+    public string CertificatePassword { get; set; } = "AspireSecure2024!";
+    public bool AllowInvalid { get; set; } = true;
+    public bool Enabled { get; set; } = true;
+
+    // Factory methods
+    public static HttpsCertificateOptions Development() => new() { AllowInvalid = true };
+    public static HttpsCertificateOptions Production(string certPath, string password) => new()
+    {
+        CertificatePath = certPath,
+        CertificatePassword = password,
+        AllowInvalid = false
+    };
+    public static HttpsCertificateOptions Disabled() => new() { Enabled = false };
+}
+```
+
+## Configuration via appsettings.json
+
+```json
+{
+  "HttpsCertificate": {
+    "CertificatePath": "/app/certs/aspnetapp.pfx",
+    "CertificatePassword": "AspireSecure2024!",
+    "AllowInvalid": true,
+    "Enabled": true
+  },
+  "CertificateSetup": {
+    "Enabled": true,
+    "AutoSetup": true,
+    "ForceRegenerate": false
+  }
+}
+```
+
+## Deployment Steps
+
+```powershell
+# 1. Generate certificate (if not exists)
+dotnet dev-certs https --export-path certs/aspnetapp.pfx --password 'AspireSecure2024!' --trust
+
+# 2. Build solution (copies certificate to output)
+dotnet build Aspire\AppHost.sln
+
+# 3. Run with Aspire (development)
+dotnet run --project Aspire\AppHost\AppHost.csproj
+
+# 4. Deploy to Docker Compose
+cd Aspire\AppHost
+aspire deploy -o ./manifests
+docker compose --env-file ./manifests/.env.Production up -d
+```
+
+## Handling Untrusted Certificate Warnings
+
+### Browser Testing
+
 ```bash
 # Chrome - ignore certificate errors
 chrome.exe --ignore-certificate-errors --ignore-ssl-errors https://localhost:6060
 
-# Firefox - accept risk and continue
-# (Click "Advanced" -> "Accept the Risk and Continue")
+# Firefox - click "Advanced" -> "Accept the Risk and Continue"
 ```
 
-### **For Inter-Service Communication:**
-Certificate is configured with `AllowInvalid = true`, so services can call each other without warnings.
+### API Testing
 
-### **For Development Tools (Postman, curl):**
 ```bash
 # curl - skip certificate verification
 curl -k https://localhost:6060/api/catalog
@@ -130,62 +146,62 @@ curl -k https://localhost:6060/api/catalog
 # Postman - Settings -> General -> SSL certificate verification -> OFF
 ```
 
-## 🔒 **Why is this Production-like and Secure?**
+### Inter-Service Communication
 
-### **Production-like:**
-- ✅ **Real Certificate**: Doesn't use `dotnet dev-certs`
-- ✅ **Proper SAN**: Supports all service names and localhost
-- ✅ **Baked into Image**: Certificate is in the container, no host dependency
-- ✅ **PFX Format**: Easy to use with Kestrel
-- ✅ **Strong Security**: RSA 4096-bit, SHA256, 10-year validity
+Certificate is configured with `AllowInvalid = true`, so services can call each other without warnings in Docker network.
 
-### **Secure for Development:**
-- ✅ **Isolated**: Each container has its own certificate
-- ✅ **No Host Dependency**: No need to install certificate on host machine
-- ✅ **Reproducible**: Script can be run again anytime
-- ✅ **Version Controlled**: Certificate files are committed to git
-- ✅ **Inter-Service Trust**: Services trust each other in Docker network
-
-## 📋 **Certificate Details**
+## Certificate Details (OpenSSL Script)
 
 - **Algorithm**: RSA 4096-bit
 - **Signature**: SHA256
 - **Validity**: 10 years
 - **Format**: PFX (with password)
 - **SAN Entries**:
-  - `DNS:localhost`
-  - `DNS:*.localhost`
+  - `DNS:localhost`, `DNS:*.localhost`
   - `DNS:catalogapi`, `DNS:catalog-api`
   - `DNS:orderapi`, `DNS:order-api`
   - `DNS:basketapi`, `DNS:basket-api`
-  - `DNS:identityapi`, `DNS:identity-api`
-  - And many more...
+  - `IP:127.0.0.1`, `IP:::1`
 
-## 🔧 **Troubleshooting**
+## Troubleshooting
 
-### **"Certificate not found" error:**
+### "Certificate not found" Error
+
 ```bash
+# Check if certificate exists in build output
+ls Services/Catalog/API/bin/Debug/net9.0/certs/
+
 # Check if certificate exists in container
 docker exec -it <container-name> ls -la /app/certs/
-
-# Check certificate info
-docker exec -it <container-name> openssl x509 -in /app/certs/aspnetapp.pfx -text -noout
 ```
 
-### **"Password incorrect" error:**
-- Ensure password in AppHost matches password in script
-- Default: `"AspireSecure2024!"`
+### "Password incorrect" Error
 
-### **Regenerate certificate:**
-```bash
-./tools/generate-aspire-cert.sh
-# The script will prompt to overwrite existing certificate
+- Ensure password in configuration matches the certificate password
+- Default: `AspireSecure2024!`
+
+### Regenerate Certificate
+
+```powershell
+# Using dotnet dev-certs
+dotnet dev-certs https --clean
+dotnet dev-certs https --export-path certs/aspnetapp.pfx --password 'AspireSecure2024!' --trust
+
+# Using script
+./tools/generate-aspire-cert.sh  # Choose 'y' to overwrite
 ```
 
-## 🎉 **Conclusion**
+### Certificate Not Copied to Output
 
-This solution provides production-like HTTPS for .NET Aspire microservices that:
-- Works completely in Docker
-- No dependency on host machine
-- Easy to setup and maintain
-- Safe for both development and production workflows
+1. Verify the `.csproj` includes the certificate copy target
+2. Check the path condition: `Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')`
+3. Rebuild the project: `dotnet build --no-incremental`
+
+## Production Considerations
+
+For production deployments:
+
+1. Use a proper CA-signed certificate
+2. Set `AllowInvalid = false` in `HttpsCertificateOptions`
+3. Store certificate password in secure vault (Azure Key Vault, etc.)
+4. Use volume mounts instead of baked-in certificates for easier rotation

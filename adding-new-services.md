@@ -1,305 +1,282 @@
-# Service Configuration Setup Guide
+# Adding New Services Guide
 
-## How to Configure a New Service
+This guide explains how to add new microservices to the Aspire e-commerce platform using the Service Definition pattern.
 
-When adding a new service to your microservices architecture, follow these steps to configure it properly.
+## Architecture Overview
 
-## 🚀 Step 1: Create Service Directory Structure
+The AppHost uses several design patterns for maintainability and extensibility:
+
+```
+Aspire/AppHost/
+├── Abstractions/
+│   ├── IServiceDefinition.cs      # Interface for service definitions
+│   ├── IInfrastructureFactory.cs  # Factory interface for infrastructure
+│   └── ServiceDefinitionBase.cs   # Base class with common logic
+├── Infrastructure/
+│   └── InfrastructureFactory.cs   # Singleton factory for DB/Cache resources
+├── Services/
+│   ├── CatalogServiceDefinition.cs # Example service implementation
+│   └── ServiceRegistry.cs          # Central registry for all services
+├── Extensions/
+│   └── DistributedApplicationBuilderExtensions.cs  # Fluent API
+└── Options/
+    ├── ServicePortOptions.cs       # Port configuration
+    └── HttpsCertificateOptions.cs  # HTTPS certificate config
+```
+
+## Step 1: Create Service Directory Structure
 
 ```
 Services/
 └── NewService/
     ├── API/
+    │   ├── NewService.API.csproj
+    │   ├── Program.cs
     │   ├── appsettings.json
-    │   ├── appsettings.Development.json
-    │   └── appsettings.Production.json
-    ├── Domain/
+    │   └── appsettings.Development.json
     ├── Application/
-    ├── Infrastructure/
-    └── Persistence/
+    ├── Domain/
+    └── Infrastructure/
 ```
 
-## 🚀 Step 2: Configure Service-Specific Settings
+## Step 2: Configure appsettings.json
 
-### Services/NewService/API/appsettings.json (base settings)
+### Services/NewService/API/appsettings.json
 
 ```json
 {
-  "Database": {
-    "Username": "newservice_user",
-    "Password": "newservice_password",
-    "VolumeName": "newservice_data"
-  },
-  "Cache": {
-    "MaxMemory": "128mb"
-  },
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "NewService": "Debug"
+      "Microsoft.AspNetCore": "Warning",
+      "NewService": "Information"
     }
-  }
-}
-```
-
-### Services/NewService/API/appsettings.Development.json (dev overrides)
-
-```json
-{
+  },
   "Database": {
-    "Password": "newservice_dev_password"
+    "Username": "newservice_user",
+    "Password": "newservice_dev_password",
+    "DatabaseName": "newservicedb",
+    "Type": "PostgreSQL"
   },
   "Cache": {
-    "MaxMemory": "256mb"
+    "MaxMemory": "256mb",
+    "PersistenceKeys": 200
   },
   "CertificateSetup": {
-    "Enabled": true
-  }
-}
-```
-
-### Services/NewService/API/appsettings.Production.json (prod overrides)
-
-```json
-{
-  "Database": {
-    "Username": "newservice_prod_user",
-    "Password": "newservice_prod_secure_password"
+    "Enabled": true,
+    "AutoSetup": true,
+    "ForceRegenerate": false
   },
-  "Cache": {
-    "MaxMemory": "512mb"
+  "NewServiceApi": {
+    "ExternalHttpPort": 7000,
+    "ExternalHttpsPort": 7060,
+    "InternalHttpPort": 8080,
+    "InternalHttpsPort": 8081
   }
 }
 ```
 
-## 🚀 Step 3: Access Configuration in Service Code
+## Step 3: Create Service Definition
 
-### Program.cs Configuration Setup
-
-```csharp
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using AppHost.Options; // If using shared options
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Configure service-specific options with fallback
-builder.Services.Configure<DatabaseOptions>(
-    ServiceConfiguration.GetServiceConfig(builder.Configuration, "NewService", "Database"));
-
-builder.Services.Configure<CacheOptions>(
-    ServiceConfiguration.GetServiceConfig(builder.Configuration, "NewService", "Cache"));
-
-// Or configure directly
-builder.Services.Configure<DatabaseOptions>(
-    builder.Configuration.GetSection("Services:NewService:Database") ??
-    builder.Configuration.GetSection("Database"));
-
-builder.Services.Configure<CacheOptions>(
-    builder.Configuration.GetSection("Services:NewService:Cache") ??
-    builder.Configuration.GetSection("Cache"));
-```
-
-### ServiceConfiguration Helper Class
-
-```csharp
-public static class ServiceConfiguration
-{
-    public static IConfigurationSection GetServiceConfig(
-        IConfiguration configuration,
-        string serviceName,
-        string sectionName)
-    {
-        // Try service-specific first
-        var serviceSpecific = configuration.GetSection($"Services:{serviceName}:{sectionName}");
-        if (serviceSpecific.Exists())
-            return serviceSpecific;
-
-        // Fall back to global
-        return configuration.GetSection(sectionName);
-    }
-}
-```
-
-## 🚀 Step 4: Use Configuration in Service Classes
-
-### Example: Database Configuration Usage
-
-```csharp
-public class NewServiceDbContext : DbContext
-{
-    private readonly DatabaseOptions _dbOptions;
-
-    public NewServiceDbContext(IOptions<DatabaseOptions> dbOptions)
-    {
-        _dbOptions = dbOptions.Value;
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseNpgsql($"Host=localhost;Database={_dbOptions.DatabaseName};Username={_dbOptions.Username};Password={_dbOptions.Password}");
-    }
-}
-```
-
-### Example: Cache Configuration Usage
-
-```csharp
-public class NewServiceCacheService
-{
-    private readonly CacheOptions _cacheOptions;
-
-    public NewServiceCacheService(IOptions<CacheOptions> cacheOptions)
-    {
-        _cacheOptions = cacheOptions.Value;
-    }
-
-    public void ConfigureCache()
-    {
-        // Use _cacheOptions.MaxMemory, _cacheOptions.PersistenceInterval, etc.
-    }
-}
-```
-
-## 🚀 Step 5: Create Service Extension Methods
-
-Create a new extension file for your service in `Aspire/AppHost/Extensions/`:
-
-### Aspire/AppHost/Extensions/NewServiceExtensions.cs
+### Aspire/AppHost/Services/NewServiceDefinition.cs
 
 ```csharp
 using System;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Docker;
+using AppHost.Abstractions;
 using AppHost.Options;
-using AppHost.Utils;
-using AppHost.Extensions;
 using Projects;
+using InfraFactory = AppHost.Infrastructure.InfrastructureFactory;
 
-namespace AppHost.Extensions
+namespace AppHost.Services;
+
+/// <summary>
+/// Service definition for the NewService microservice.
+/// </summary>
+public sealed class NewServiceDefinition : ServiceDefinitionBase, IDatabaseService, ICacheService
 {
-    /// <summary>
-    /// Extensions for NewService components
-    /// </summary>
-    public static class NewServiceExtensions
+    public override string ServiceName => "newservice";
+    public override string DisplayName => "NewService API";
+
+    public DatabaseRequirement DatabaseRequirement => DatabaseRequirement.Shared("Database");
+    public bool RequiresDedicatedCache => false;
+
+    public NewServiceDefinition() : base(InfraFactory.Instance) { }
+
+    public NewServiceDefinition(IInfrastructureFactory infrastructureFactory)
+        : base(infrastructureFactory) { }
+
+    public override IResourceBuilder<ProjectResource> Register(IDistributedApplicationBuilder builder)
     {
-        public static IResourceBuilder<ProjectResource> AddNewServiceApi(
-            this IDistributedApplicationBuilder builder,
-            string serviceName)
-        {
-            // Service methods handle their own configuration - create dependencies too
-            var database = builder.AddServiceDatabase(serviceName, "Database");
-            var cache = builder.AddNewServiceCache();
+        // Get infrastructure resources
+        var database = base.InfrastructureFactory.GetOrCreateDatabase(
+            builder, ServiceName, DatabaseRequirement.DatabaseName);
+        var cache = base.InfrastructureFactory.GetOrCreateCache(builder);
 
-            // Get configuration options for this service
-            var mergedConfig = builder.Configuration;
-            var apiOptions = ServiceConfigurationHelper.GetNewServiceApiOptions(mergedConfig);
-            var httpsCertOptions = ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
+        // Get configuration options
+        var portOptions = GetPortOptions(builder);
+        var certOptions = GetHttpsCertificateOptions(builder);
 
-            // External ports: what host exposes (default from env or parameter)
-            int httpPort = apiOptions.ExternalHttpPort ?? int.Parse(Environment.GetEnvironmentVariable("NEWSERVICE_HTTP_PORT") ?? "5000");
-            int httpsPort = apiOptions.ExternalHttpsPort ?? int.Parse(Environment.GetEnvironmentVariable("NEWSERVICE_HTTPS_PORT") ?? "5443");
+        // Build the service
+        var api = builder.AddProject<NewService_API>($"{ServiceName}-api")
+            .WithEnvironment("ASPNETCORE_ENVIRONMENT", GetEnvironment())
+            .WithReference(database)
+            .WithReference(cache)
+            .WaitFor(database);
 
-            return builder.AddProject<NewService_API>($"{serviceName}-api")
-                .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-                .WithReference(database)
-                .WithReference(cache)
-                .WithHttpEndpoint(httpPort, apiOptions.InternalHttpPort, $"{serviceName}-http")
-                .WithHttpsEndpoint(httpsPort, apiOptions.InternalHttpsPort, $"{serviceName}-https")
-                .WaitFor(database)
-                .PublishAsDockerComposeService((resource, service) =>
-                {
-                    service.Name = $"{serviceName}-api";
-                    service.Environment["HTTP_PORTS"] = apiOptions.InternalHttpPort.ToString();
-                    service.Environment["HTTPS_PORTS"] = apiOptions.InternalHttpsPort.ToString();
-                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = httpsCertOptions.CertificatePath;
-                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = httpsCertOptions.CertificatePassword;
-                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = httpsCertOptions.AllowInvalid.ToString().ToLowerInvariant();
-                })
-                .WithBakedInHttpsCertificate(httpsCertOptions);
-        }
+        // Configure endpoints
+        api = ConfigureEndpoints(api, portOptions);
 
-        public static IResourceBuilder<RedisResource> AddNewServiceCache(
-            this IDistributedApplicationBuilder builder)
-        {
-            // Get configuration options for the cache
-            var mergedConfig = builder.Configuration;
-            var options = ServiceConfigurationHelper.GetCacheOptions(mergedConfig);
+        // Configure for Docker deployment
+        api = ConfigureForDocker(api, portOptions, certOptions);
 
-            return builder.AddRedis("distributedcache")
-                .WithImage(options.Image)
-                .WithDataVolume(options.VolumeName)
-                .WithPersistence(options.PersistenceInterval, options.PersistenceKeys)
-                .WithArgs("--maxmemory", options.MaxMemory, "--maxmemory-policy", options.MaxMemoryPolicy)
-                .WithRedisCommander()
-                .PublishAsDockerComposeService((resource, service) => { service.Name = "distributedcache"; });
-        }
+        return api;
+    }
+
+    private static string GetEnvironment()
+    {
+        return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
     }
 }
 ```
 
-## 🚀 Step 6: Add Helper Method to ServiceConfigurationHelper.cs
+## Step 4: Register in ServiceRegistry
 
-Add your service's configuration helper method:
+### Aspire/AppHost/Services/ServiceRegistry.cs
+
+Add your service to the `CreateDefault()` method:
 
 ```csharp
-// In ServiceConfigurationHelper.cs
-public static NewServiceApiOptions GetNewServiceApiOptions(IConfiguration config)
+public static ServiceRegistry CreateDefault()
 {
-    return config.GetSection("Services:NewService:NewServiceApi").Get<NewServiceApiOptions>() ??
-           config.GetSection("NewServiceApi").Get<NewServiceApiOptions>() ??
-           new NewServiceApiOptions();
+    return new ServiceRegistry()
+        .Add<CatalogServiceDefinition>()
+        .Add<NewServiceDefinition>();  // Add your new service here
 }
 ```
 
-## 🚀 Step 7: Update AppHost.cs
+## Step 5: Add Certificate Copy to .csproj
 
-Add your service to the orchestration:
+### Services/NewService/API/NewService.API.csproj
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- Copy HTTPS certificates to output for Docker deployment -->
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')"
+              CopyToOutputDirectory="PreserveNewest"
+              Link="certs\aspnetapp.pfx"/>
+    </ItemGroup>
+</Project>
+```
+
+## Step 6: Add Port Options (Optional)
+
+If your service needs custom port configuration, add to `ServiceConfigurationHelper.cs`:
 
 ```csharp
-// In AppHost.cs
-IResourceBuilder<ProjectResource> newServiceApi = builder.AddNewServiceApi("newservice");
+public static ServicePortOptions GetNewServicePortOptions(IConfiguration config)
+{
+    var options = config.GetSection("Services:NewService:Ports").Get<ServicePortOptions>()
+                  ?? config.GetSection("NewServiceApi").Get<ServicePortOptions>()
+                  ?? new ServicePortOptions();
+
+    options.Validate("newservice");
+    return options;
+}
 ```
 
-## 📋 Configuration Resolution Examples
+## Configuration Resolution Order
 
-### For NewService in Development:
-```
-Services:NewService:Database:Username = "newservice_user"        ← Service-specific
-Services:NewService:Database:Password = "newservice_dev_password" ← Service + env specific
-Services:NewService:Cache:MaxMemory = "256mb"                   ← Service + env specific
-Database:Username = "postgres"                                  ← Global fallback
-Cache:MaxMemory = "128mb"                                       ← Global fallback
-```
+The configuration system uses a fallback pattern:
 
-### For NewService in Production:
+1. `Services:{ServiceName}:Ports` - Service-specific in merged config
+2. `{ServiceName}Api` - Legacy format support
+3. Default values from `ServicePortOptions`
+
+### Example Resolution:
+
 ```
-Services:NewService:Database:Username = "newservice_prod_user"     ← Service + env specific
-Services:NewService:Database:Password = "newservice_prod_secure_password" ← Service + env specific
-Services:NewService:Cache:MaxMemory = "512mb"                     ← Service + env specific
-Database:Username = "postgres"                                    ← Global fallback
+Configuration lookup for "newservice":
+1. Services:NewService:Ports          ← Preferred (service-specific)
+2. NewServiceApi                       ← Legacy fallback
+3. ServicePortOptions defaults         ← Final fallback
 ```
 
-## 🎯 Best Practices
+## AppHost Entry Point
 
-### 1. Environment-Specific Configurations
-- Put environment-agnostic settings in `appsettings.json`
+The refactored `AppHost.cs` is clean and simple:
+
+```csharp
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
+
+builder
+    .WithDefaultConfiguration()  // Docker Compose, config merge, validation, certs
+    .WithServices();             // Register all services from ServiceRegistry
+
+builder.Build().Run();
+```
+
+## Best Practices
+
+### 1. Service Definition
+
+- Inherit from `ServiceDefinitionBase` for common functionality
+- Implement `IDatabaseService` if service needs a database
+- Implement `ICacheService` if service needs caching
+- Use `base.InfrastructureFactory` for shared resources
+
+### 2. Configuration
+
+- Put base settings in `appsettings.json`
 - Put environment-specific overrides in `appsettings.{Environment}.json`
+- Never commit production secrets to source control
 
-### 2. Sensitive Data
-- Never put passwords or secrets in config files
-- Use environment variables or Azure Key Vault for secrets
-- Use placeholders in config and resolve at runtime
+### 3. Infrastructure Sharing
 
-### 3. Configuration Naming
-- Use consistent naming across services
-- Document configuration options in service README
-- Version configuration changes with service releases
+- Use `InfrastructureFactory.GetOrCreateDatabase()` for database resources
+- Use `InfrastructureFactory.GetOrCreateCache()` for cache resources
+- Factory ensures resources are created only once and shared
 
-### 4. Fallback Strategy
-- Always provide sensible global fallbacks
-- Service-specific configs should only override when necessary
-- Use the `ServiceConfiguration.GetServiceConfig()` helper for clean fallback logic
+### 4. Naming Conventions
 
-This approach ensures each service maintains its autonomy while benefiting from global defaults and infrastructure consistency.
+- Service name: lowercase, no hyphens (e.g., `newservice`)
+- Resource names: `{serviceName}-api`, `{serviceName}-postgres`
+- Configuration sections: `NewServiceApi`, `Services:NewService:Ports`
+
+## Testing Your New Service
+
+```powershell
+# Build the solution
+dotnet build Aspire\AppHost.sln
+
+# Run with Aspire
+dotnet run --project Aspire\AppHost\AppHost.csproj
+
+# Your service should be available at:
+# HTTP:  http://localhost:7000
+# HTTPS: https://localhost:7060
+```
+
+## Troubleshooting
+
+### Service not registering
+
+- Ensure `NewServiceDefinition` is added to `ServiceRegistry.CreateDefault()`
+- Check that the project reference exists in `AppHost.csproj`
+
+### Certificate errors
+
+- Run `dotnet dev-certs https --export-path certs/aspnetapp.pfx --password 'AspireSecure2024!' --trust`
+- Ensure certificate is copied via `.csproj` configuration
+
+### Port conflicts
+
+- Check that `ExternalHttpPort` and `ExternalHttpsPort` are unique
+- Use environment variables to override: `NEWSERVICE_HTTP_PORT`, `NEWSERVICE_HTTPS_PORT`

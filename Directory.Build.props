@@ -29,4 +29,29 @@
         <DebugSymbols>true</DebugSymbols>
     </PropertyGroup>
 
+    <!-- Certificate copying for Docker deployment (for all projects in Services directory) -->
+    <Target Name="CopyCertificate" AfterTargets="Build" Condition="'$(MSBuildProjectDirectory.Contains(\Services\))'">
+        <PropertyGroup>
+            <!-- From Services/{ServiceName}/API, go up 3 levels to project root -->
+            <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</ProjectRoot>
+            <CertSourcePath>$(ProjectRoot)\certs\aspnetapp.pfx</CertSourcePath>
+        </PropertyGroup>
+        <Copy SourceFiles="$(CertSourcePath)"
+              DestinationFolder="$(OutputPath)"
+              SkipUnchangedFiles="true"
+              Condition="Exists('$(CertSourcePath)')" />
+    </Target>
+
+    <!-- Also copy for publish -->
+    <Target Name="CopyCertificateForPublish" AfterTargets="Publish" Condition="'$(MSBuildProjectDirectory.Contains(\Services\))'">
+        <PropertyGroup>
+            <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</ProjectRoot>
+            <CertSourcePath>$(ProjectRoot)\certs\aspnetapp.pfx</CertSourcePath>
+        </PropertyGroup>
+        <Copy SourceFiles="$(CertSourcePath)"
+              DestinationFolder="$(PublishDir)"
+              SkipUnchangedFiles="true"
+              Condition="Exists('$(CertSourcePath)')" />
+    </Target>
+
 </Project>

@@ -96,10 +96,13 @@ var basketApi = builder.AddProject<Basket_API>("basket-api")
 chmod +x tools/generate-aspire-cert.sh
 ./tools/generate-aspire-cert.sh
 
-# 2. Deploy with Aspire
+# 2. Build services (certificates automatically copied via Directory.Build.props)
+dotnet build
+
+# 3. Deploy with Aspire
 dotnet run --project Aspire/AppHost -- deploy -o ./manifests
 
-# 3. Run docker-compose
+# 4. Run docker-compose
 docker-compose -f ./manifests/docker-compose.yml up -d
 ```
 

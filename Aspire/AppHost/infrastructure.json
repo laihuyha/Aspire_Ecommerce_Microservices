@@ -23,7 +23,7 @@
     "MaxMemoryPolicy": "allkeys-lru"
   },
   "HttpsCertificate": {
-    "CertificatePath": "/app/certs/aspnetapp.pfx",
+    "CertificatePath": "/app/aspnetapp.pfx",
     "CertificatePassword": "AspireSecure2024!",
     "AllowInvalid": true
   }

@@ -145,6 +145,31 @@ var dbConfig = ServiceConfiguration.GetServiceConfig(builder.Configuration, "Cat
 builder.Services.Configure<DatabaseOptions>(dbConfig);
 ```
 
+## 🔐 Certificate Handling
+
+### Automatic Certificate Copying
+
+Certificates are automatically copied to each service's output directory during build via `Directory.Build.props`:
+
+```xml
+<!-- Certificate copying for Docker deployment (for all projects in Services directory) -->
+<Target Name="CopyCertificate" AfterTargets="Build"
+        Condition="'$(MSBuildProjectDirectory.Contains(\Services\))'">
+    <PropertyGroup>
+        <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</ProjectRoot>
+        <CertSourcePath>$(ProjectRoot)\certs\aspnetapp.pfx</CertSourcePath>
+    </PropertyGroup>
+    <Copy SourceFiles="$(CertSourcePath)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(CertSourcePath)')" />
+</Target>
+```
+
+### Certificate Path in Docker
+
+The certificate is available in Docker containers at `/app/aspnetapp.pfx` for all API services.
+
 ## 📊 Configuration Resolution Examples
 
 ### Database Username Resolution:

@@ -47,7 +47,7 @@ namespace AppHost
             string databaseName)
         {
             var options = new DatabaseOptions { Type = DatabaseType.PostgreSQL };
-            return (IResourceBuilder<PostgresDatabaseResource>)AddServiceDatabase(builder, "catalog", databaseName, options);
+            return AddServiceDatabase(builder, "catalog", databaseName, options);
         }
 
         public static IResourceBuilder<RedisResource> AddCatalogCache(

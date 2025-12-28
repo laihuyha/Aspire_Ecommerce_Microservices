@@ -50,6 +50,9 @@ public static class SelfSignCertificateSetup
                     $"Certificate generation failed. Expected file not found: {certFile}");
             }
 
+            // Note: Certificate will be copied to application output directory via MSBuild targets in .csproj
+            Console.WriteLine($"[Aspire] 📝 Certificate will be included in Docker image via MSBuild copy targets");
+
             Console.WriteLine($"[Aspire] ✅ Certificate setup completed: {certFile}");
         }
         catch (Exception ex)

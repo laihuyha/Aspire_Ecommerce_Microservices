@@ -14,6 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
+// Add Docker Compose environment for deployment
+builder.AddDockerComposeEnvironment("aspire-ecommerce");
+
 // Collect and merge service configurations
 string servicesPath = Constants.ServicesPath;
 string[] serviceDirectories = Directory.Exists(servicesPath)

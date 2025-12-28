@@ -1,6 +1,6 @@
 {
   "CertificateSetup": {
-    "Enabled": false,
+    "Enabled": true,
     "AutoSetup": true,
     "ForceRegenerate": false
   },

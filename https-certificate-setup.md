@@ -31,23 +31,25 @@ bash tools/generate-aspire-cert.sh
 - **Ubuntu/Debian**: `sudo apt update && sudo apt install openssl`
 - **Windows**: Use Git Bash or WSL with OpenSSL installed
 
-### 2. **Certificate Configuration in AppHost**
+### 2. **Certificate Configuration in Service Extensions**
 
-Add environment variables to `PublishAsDockerComposeService`:
+Certificates are configured automatically in service extension methods:
 
+#### CatalogServiceExtensions.cs
 ```csharp
-// Aspire/AppHost/Extensions/InfrastructureExtensions.cs
+// Aspire/AppHost/Extensions/CatalogServiceExtensions.cs
 .PublishAsDockerComposeService((resource, service) =>
 {
     service.Name = $"{serviceName}-api";
-    service.Environment["HTTP_PORTS"] = options.InternalHttpPort.ToString();
-    service.Environment["HTTPS_PORTS"] = options.InternalHttpsPort.ToString();
+    service.Environment["HTTP_PORTS"] = apiOptions.InternalHttpPort.ToString();
+    service.Environment["HTTPS_PORTS"] = apiOptions.InternalHttpsPort.ToString();
 
     // 🔐 HTTPS Certificate Configuration for Docker
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = "/app/certs/aspnetapp.pfx";
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = "AspireSecure2024!";
-    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = "true";
-});
+    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = "/app/aspnetapp.pfx";
+    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = httpsCertOptions.CertificatePassword;
+    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = httpsCertOptions.AllowInvalid.ToString().ToLowerInvariant();
+})
+.WithBakedInHttpsCertificate(httpsCertOptions);
 ```
 
 ### 3. **Usage Example for Multiple Services**

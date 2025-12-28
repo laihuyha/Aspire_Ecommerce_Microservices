@@ -161,21 +161,105 @@ public class NewServiceCacheService
 }
 ```
 
-## 🚀 Step 5: Update AppHost.cs (if needed)
+## 🚀 Step 5: Create Service Extension Methods
 
-If your service needs special AppHost configuration, add it:
+Create a new extension file for your service in `Aspire/AppHost/Extensions/`:
+
+### Aspire/AppHost/Extensions/NewServiceExtensions.cs
+
+```csharp
+using System;
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Docker;
+using AppHost.Options;
+using AppHost.Utils;
+using AppHost.Extensions;
+using Projects;
+
+namespace AppHost.Extensions
+{
+    /// <summary>
+    /// Extensions for NewService components
+    /// </summary>
+    public static class NewServiceExtensions
+    {
+        public static IResourceBuilder<ProjectResource> AddNewServiceApi(
+            this IDistributedApplicationBuilder builder,
+            string serviceName)
+        {
+            // Service methods handle their own configuration - create dependencies too
+            var database = builder.AddServiceDatabase(serviceName, "Database");
+            var cache = builder.AddNewServiceCache();
+
+            // Get configuration options for this service
+            var mergedConfig = builder.Configuration;
+            var apiOptions = ServiceConfigurationHelper.GetNewServiceApiOptions(mergedConfig);
+            var httpsCertOptions = ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
+
+            // External ports: what host exposes (default from env or parameter)
+            int httpPort = apiOptions.ExternalHttpPort ?? int.Parse(Environment.GetEnvironmentVariable("NEWSERVICE_HTTP_PORT") ?? "5000");
+            int httpsPort = apiOptions.ExternalHttpsPort ?? int.Parse(Environment.GetEnvironmentVariable("NEWSERVICE_HTTPS_PORT") ?? "5443");
+
+            return builder.AddProject<NewService_API>($"{serviceName}-api")
+                .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+                .WithReference(database)
+                .WithReference(cache)
+                .WithHttpEndpoint(httpPort, apiOptions.InternalHttpPort, $"{serviceName}-http")
+                .WithHttpsEndpoint(httpsPort, apiOptions.InternalHttpsPort, $"{serviceName}-https")
+                .WaitFor(database)
+                .PublishAsDockerComposeService((resource, service) =>
+                {
+                    service.Name = $"{serviceName}-api";
+                    service.Environment["HTTP_PORTS"] = apiOptions.InternalHttpPort.ToString();
+                    service.Environment["HTTPS_PORTS"] = apiOptions.InternalHttpsPort.ToString();
+                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Path"] = httpsCertOptions.CertificatePath;
+                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__Password"] = httpsCertOptions.CertificatePassword;
+                    service.Environment["ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid"] = httpsCertOptions.AllowInvalid.ToString().ToLowerInvariant();
+                })
+                .WithBakedInHttpsCertificate(httpsCertOptions);
+        }
+
+        public static IResourceBuilder<RedisResource> AddNewServiceCache(
+            this IDistributedApplicationBuilder builder)
+        {
+            // Get configuration options for the cache
+            var mergedConfig = builder.Configuration;
+            var options = ServiceConfigurationHelper.GetCacheOptions(mergedConfig);
+
+            return builder.AddRedis("distributedcache")
+                .WithImage(options.Image)
+                .WithDataVolume(options.VolumeName)
+                .WithPersistence(options.PersistenceInterval, options.PersistenceKeys)
+                .WithArgs("--maxmemory", options.MaxMemory, "--maxmemory-policy", options.MaxMemoryPolicy)
+                .WithRedisCommander()
+                .PublishAsDockerComposeService((resource, service) => { service.Name = "distributedcache"; });
+        }
+    }
+}
+```
+
+## 🚀 Step 6: Add Helper Method to ServiceConfigurationHelper.cs
+
+Add your service's configuration helper method:
+
+```csharp
+// In ServiceConfigurationHelper.cs
+public static NewServiceApiOptions GetNewServiceApiOptions(IConfiguration config)
+{
+    return config.GetSection("Services:NewService:NewServiceApi").Get<NewServiceApiOptions>() ??
+           config.GetSection("NewServiceApi").Get<NewServiceApiOptions>() ??
+           new NewServiceApiOptions();
+}
+```
+
+## 🚀 Step 7: Update AppHost.cs
+
+Add your service to the orchestration:
 
 ```csharp
 // In AppHost.cs
-IResourceBuilder<ProjectResource> newServiceApi = builder.AddProject<NewService_API>(
-    "newservice-api",
-    project => project
-        .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-        .WithReference(database)
-        .WithReference(cache)
-        .WithHttpEndpoint(5000, 8080, "newservice-http")
-        .WithHttpsEndpoint(5443, 8443, "newservice-https")
-        .WithBakedInHttpsCertificate());
+IResourceBuilder<ProjectResource> newServiceApi = builder.AddNewServiceApi("newservice");
 ```
 
 ## 📋 Configuration Resolution Examples

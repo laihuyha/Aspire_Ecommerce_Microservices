@@ -32,48 +32,53 @@ Repositories (future) - Messaging (MassTransit / RabbitMQ - future) - External A
 
 ------------------------------------------------------------------------
 
-## 4. Dependency Flow (Clean Architecture)
+## 4. Dependency Flow (Clean Architecture + Infrastructure Extensions)
 
 ```
-Aspire/AppHost/             # Orchestrates all services
-├── Services/               # Business Microservices
-│
-BuildingBlocks/            # SHARED CROSS-CUTTING CODE
-│
-Aspire_Ecommerce_Microservices/
-│
-├── API (Presentation Layer)
-│   ├── Controllers/       # Thin controllers, handle HTTP
-│   ├── DTOs/              # Request/Response models
-│   ├── Program.cs         # Service entry point
-│   └── Middleware/        # Cross-cutting concerns
-│
-├── Application (Use Cases Layer)
-│   ├── Commands/          # Write operations (CQRS)
-│   ├── Queries/           # Read operations (CQRS)
-│   ├── Handlers/          # Command/Query handlers
-│   ├── Validators/        # FluentValidation rules
-│   └── Specifications/    # Business query rules
-│
-├── Domain (Business Logic Layer)
-│   ├── Aggregates/        # Aggregate roots
-│   ├── Entities/          # Domain entities
-│   ├── ValueObjects/      # Value objects
-│   ├── Events/            # Domain events
-│   └── Interfaces/        # Repository contracts
-│
-├── Infrastructure (External Concerns Layer)
-│   ├── Configurations/    # Database configurations
-│   ├── Repositories/      # Data access implementations
-│   ├── Services/          # External service integrations
-│   └── UnitOfWork/        # Transaction management
+Aspire/AppHost/                          # Service orchestration
+├── Extensions/                          # Infrastructure setup
+│   ├── InfrastructureExtensions.cs      # Reusable infrastructure (databases)
+│   └── CatalogServiceExtensions.cs      # Service-specific components
+├── Utils/                               # Configuration helpers
+│   ├── ServiceConfigurationHelper.cs    # Option extraction
+│   └── ConfigurationMerger.cs          # Service config merging
+├── Options/                             # Configuration models
+└── AppHost.cs                           # Pure orchestration (9 lines)
+
+Services/                               # Business Microservices
+├── Catalog/                            # Currently implemented service
+│   ├── API/                            # Presentation Layer
+│   │   ├── Controllers/                # Thin controllers, handle HTTP
+│   │   ├── DTOs/                       # Request/Response models
+│   │   ├── Program.cs                  # Service entry point
+│   │   └── Middleware/                 # Cross-cutting concerns
+│   │
+│   ├── Application/                    # Use Cases Layer
+│   │   ├── Commands/                   # Write operations (CQRS)
+│   │   ├── Queries/                    # Read operations (CQRS)
+│   │   ├── Handlers/                   # Command/Query handlers
+│   │   ├── Validators/                 # FluentValidation rules
+│   │   └── Specifications/             # Business query rules
+│   │
+│   ├── Domain/                         # Business Logic Layer
+│   │   ├── Aggregates/                 # Aggregate roots
+│   │   ├── Entities/                   # Domain entities
+│   │   ├── ValueObjects/               # Value objects
+│   │   ├── Events/                     # Domain events
+│   │   └── Interfaces/                 # Repository contracts
+│   │
+│   └── Infrastructure/                 # External Concerns Layer
+│       ├── Configurations/             # Database configurations
+│       ├── Repositories/               # Data access implementations
+│       ├── Services/                   # External service integrations
+│       └── UnitOfWork/                 # Transaction management
 │
 └── BuildingBlocks (Cross-Cutting Abstractions)
-    ├── CQRS/             # Command/Query interfaces
-    ├── Entity/           # Base entity patterns
-    ├── Errors/           # Exception handling
-    ├── Logging/          # Structured logging
-    └── Behaviors/        # MediatR pipeline behaviors
+    ├── CQRS/                          # Command/Query interfaces
+    ├── Entity/                        # Base entity patterns
+    ├── Errors/                        # Exception handling
+    ├── Logging/                       # Structured logging
+    └── Behaviors/                     # MediatR pipeline behaviors
 ```
 
 ### Clean Architecture Dependency Rules

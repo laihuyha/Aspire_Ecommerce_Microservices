@@ -162,7 +162,7 @@ for proj in "${PROJECT_NAMES[@]}"; do
         mkdir -p "$TARGET_DIR"
         cp "$PFX_FILE" "$TARGET_DIR/"
         echo "   ✅ Copied → $TARGET_DIR/aspnetapp.pfx"
-        ((COPIED_COUNT++))
+        COPIED_COUNT=$((COPIED_COUNT + 1))
     fi
 done
 

@@ -83,7 +83,12 @@ public static class DistributedApplicationBuilderExtensions
         this IDistributedApplicationBuilder builder,
         string environmentName = "aspire-ecommerce")
     {
-        builder.AddDockerComposeEnvironment(environmentName);
+        builder.AddDockerComposeEnvironment(environmentName)
+            .ConfigureComposeFile(compose =>
+            {
+                // Set a fixed project name so `docker compose down` works without -p flag
+                compose.Name = environmentName;
+            });
         return builder;
     }
 

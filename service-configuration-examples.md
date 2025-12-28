@@ -145,6 +145,94 @@ var dbConfig = ServiceConfiguration.GetServiceConfig(builder.Configuration, "Cat
 builder.Services.Configure<DatabaseOptions>(dbConfig);
 ```
 
+## 🔧 Infrastructure Extensions Architecture
+
+### Extension File Organization
+
+The infrastructure setup is organized into focused extension files:
+
+#### InfrastructureExtensions.cs (Reusable Infrastructure)
+```csharp
+namespace AppHost
+{
+    /// <summary>
+    /// Reusable infrastructure extensions that can be used by multiple services
+    /// </summary>
+    public static class InfrastructureExtensions
+    {
+        public static IResourceBuilder<PostgresDatabaseResource> AddServiceDatabase(...)
+        // Generic database creation for any service
+    }
+}
+```
+
+#### CatalogServiceExtensions.cs (Service-Specific)
+```csharp
+namespace AppHost.Extensions
+{
+    /// <summary>
+    /// Extensions for Catalog service components
+    /// </summary>
+    public static class CatalogServiceExtensions
+    {
+        public static IResourceBuilder<RedisResource> AddCatalogCache(...)
+        public static IResourceBuilder<ProjectResource> AddCatalogApi(...)
+        // Catalog-specific implementations
+    }
+}
+```
+
+### Self-Contained Service Methods
+
+Each service method handles its own configuration and dependencies:
+
+```csharp
+public static IResourceBuilder<ProjectResource> AddCatalogApi(
+    this IDistributedApplicationBuilder builder,
+    string serviceName)
+{
+    // Creates its own dependencies
+    var database = builder.AddServiceDatabase(serviceName, "Database");
+    var cache = builder.AddCatalogCache();
+
+    // Handles its own configuration
+    var mergedConfig = builder.Configuration;
+    var apiOptions = ServiceConfigurationHelper.GetCatalogApiOptions(mergedConfig);
+    var httpsCertOptions = ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
+
+    // Configures itself completely
+    return builder.AddProject<Catalog_API>(...)
+        .WithReference(database)
+        .WithReference(cache)
+        // ... complete configuration
+}
+```
+
+## 🔐 Certificate Handling
+
+### Automatic Certificate Copying
+
+Certificates are automatically copied to each service's output directory during build via `Directory.Build.props`:
+
+```xml
+<!-- Certificate copying for Docker deployment (for all projects in Services directory) -->
+<Target Name="CopyCertificate" AfterTargets="Build"
+        Condition="'$(MSBuildProjectDirectory.Contains(\Services\))'">
+    <PropertyGroup>
+        <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</ProjectRoot>
+        <CertSourcePath>$(ProjectRoot)\certs\aspnetapp.pfx</CertSourcePath>
+    </PropertyGroup>
+    <Copy SourceFiles="$(CertSourcePath)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(CertSourcePath)')" />
+</Target>
+```
+
+### Certificate Path in Docker
+
+The certificate is available in Docker containers at `/app/aspnetapp.pfx` for all API services.
+
 ## 📊 Configuration Resolution Examples
 
 ### Database Username Resolution:

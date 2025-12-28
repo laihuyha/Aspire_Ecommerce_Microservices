@@ -82,36 +82,77 @@ Services:Order:Database:Port = 1433
 
 #### For Catalog Service:
 ```csharp
-// In AppHost.cs
-var catalogDbOptions = mergedConfig.GetSection("Services:Catalog:Database").Get<DatabaseOptions>() ??
-                      mergedConfig.GetSection("Database").Get<DatabaseOptions>() ??
-                      new DatabaseOptions();
-
-// Result: Merges service-specific with global defaults
-catalogDbOptions = {
-    Type: "PostgreSQL",           // From global (service didn't override)
-    Username: "catalog_user",     // From Services:Catalog:Database
-    Password: "catalog_dev_password", // From Services:Catalog:Database
-    DatabaseName: "catalogdb",    // From Services:Catalog:Database
-    Host: "localhost",            // From global
-    Port: 5432                    // From global
+// Configuration extraction moved to InfrastructureExtensions.AddServiceDatabase()
+public static IResourceBuilder<PostgresDatabaseResource> AddServiceDatabase(
+    this IDistributedApplicationBuilder builder,
+    string serviceName,
+    string databaseName)
+{
+    // Extracts service-specific config automatically
+    var mergedConfig = builder.Configuration;
+    var options = ServiceConfigurationHelper.GetServiceDatabaseOptions(mergedConfig, serviceName);
+    // options now contains merged service-specific + global defaults
 }
+
+// In AppHost.cs - just calls the method
+var catalogDb = builder.AddServiceDatabase("catalog", "Database");
 ```
 
 #### For Order Service:
 ```csharp
-// If Order service existed in AppHost:
-var orderDbOptions = mergedConfig.GetSection("Services:Order:Database").Get<DatabaseOptions>() ??
-                    mergedConfig.GetSection("Database").Get<DatabaseOptions>() ??
-                    new DatabaseOptions();
+// Same method handles different service configurations automatically
+var orderDb = builder.AddServiceDatabase("order", "Database");
+// Method extracts Services:Order:Database config automatically
+// Result: Different database settings for Order service
+```
 
-// Result: Service completely overrides database type and connection
-orderDbOptions = {
-    Type: "SqlServer",            // From Services:Order:Database (override!)
-    Username: "order_user",       // From Services:Order:Database
-    Password: "order_dev_password", // From Services:Order:Database
-    Host: "order-sql-server",     // From Services:Order:Database (override!)
-    Port: 1433                    // From Services:Order:Database (override!)
+## 🔧 Service Method Architecture
+
+### Self-Contained Service Methods
+
+Each service method handles its own configuration and dependency creation:
+
+```csharp
+// CatalogServiceExtensions.cs
+public static IResourceBuilder<ProjectResource> AddCatalogApi(
+    this IDistributedApplicationBuilder builder,
+    string serviceName)
+{
+    // Creates its own dependencies with service-specific configs
+    var database = builder.AddServiceDatabase(serviceName, "Database");
+    var cache = builder.AddCatalogCache();
+
+    // Handles its own configuration extraction
+    var mergedConfig = builder.Configuration;
+    var apiOptions = ServiceConfigurationHelper.GetCatalogApiOptions(mergedConfig);
+    var httpsCertOptions = ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
+
+    // Configures itself completely
+    return builder.AddProject<Catalog_API>(...)
+        .WithReference(database)
+        .WithReference(cache)
+        // ... complete service configuration
+}
+```
+
+### Configuration Helper Methods
+
+Reusable configuration extraction methods:
+
+```csharp
+// ServiceConfigurationHelper.cs
+public static DatabaseOptions GetServiceDatabaseOptions(IConfiguration config, string serviceName)
+{
+    return config.GetSection($"Services:{serviceName}:Database").Get<DatabaseOptions>() ??
+           config.GetSection("Database").Get<DatabaseOptions>() ??
+           new DatabaseOptions();
+}
+
+public static CatalogApiOptions GetCatalogApiOptions(IConfiguration config)
+{
+    return config.GetSection("Services:Catalog:CatalogApi").Get<CatalogApiOptions>() ??
+           config.GetSection("CatalogApi").Get<CatalogApiOptions>() ??
+           new CatalogApiOptions();
 }
 ```
 

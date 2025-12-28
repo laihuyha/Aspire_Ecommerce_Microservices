@@ -29,11 +29,19 @@ docker compose --env-file ./manifests/.env.Production up -d
 
 ```
 Aspire_Ecommerce_Microservices/
-├── Aspire/AppHost/           # Service orchestration & configuration
-├── BuildingBlocks/           # Shared components (CQRS, Entities, etc.)
-├── Services/Catalog/         # Product catalog microservice
-├── tools/                    # Development utilities
-└── docs/                     # Detailed documentation
+├── Aspire/AppHost/                     # Service orchestration & configuration
+│   ├── Extensions/                     # Infrastructure setup
+│   │   ├── InfrastructureExtensions.cs # Reusable components (databases)
+│   │   └── CatalogServiceExtensions.cs # Service-specific implementations
+│   ├── Utils/                          # Configuration helpers
+│   │   ├── ServiceConfigurationHelper.cs # Option extraction methods
+│   │   └── ConfigurationMerger.cs      # Service config merging
+│   ├── Options/                        # Configuration models
+│   └── AppHost.cs                      # Pure orchestration (9 lines)
+├── BuildingBlocks/                     # Shared components (CQRS, Entities, etc.)
+├── Services/Catalog/                   # Product catalog microservice
+├── tools/                              # Development utilities
+└── docs/                               # Detailed documentation
 ```
 
 ## 🏗️ Architecture

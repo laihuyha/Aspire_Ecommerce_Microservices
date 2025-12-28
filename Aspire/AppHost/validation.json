@@ -1,0 +1,13 @@
+{
+  "CertificateSetup": {
+    "Enabled": false,
+    "AutoSetup": true,
+    "ForceRegenerate": false
+  },
+  "AllowedHostsValidation": {
+    "Enabled": true,
+    "ConfigFileName": "appsettings.Development.json",
+    "ConfigFileDirectory": "API",
+    "RequiredAllowedHostsValue": "*"
+  }
+}

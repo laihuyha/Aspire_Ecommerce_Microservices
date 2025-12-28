@@ -1,0 +1,30 @@
+{
+  "Database": {
+    "Type": "PostgreSQL",
+    "Username": "postgres",
+    "Password": "dev_password_123",
+    "DatabaseName": "appdb",
+    "Host": "localhost",
+    "Port": 5432,
+    "Image": "postgres:16-alpine",
+    "VolumeName": "catalog_data",
+    "DataPath": "/var/lib/postgresql/data",
+    "SqlServerImage": "mcr.microsoft.com/mssql/server:2022-latest",
+    "SqlServerPassword": "YourStrong!Passw0rd",
+    "MySqlImage": "mysql:8.0",
+    "MongoImage": "mongo:7.0"
+  },
+  "Cache": {
+    "Image": "redis:7-alpine",
+    "VolumeName": "redis_data",
+    "PersistenceIntervalMinutes": 5,
+    "PersistenceKeys": 100,
+    "MaxMemory": "128mb",
+    "MaxMemoryPolicy": "allkeys-lru"
+  },
+  "HttpsCertificate": {
+    "CertificatePath": "/app/certs/aspnetapp.pfx",
+    "CertificatePassword": "AspireSecure2024!",
+    "AllowInvalid": true
+  }
+}

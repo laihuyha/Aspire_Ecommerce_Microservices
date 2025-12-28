@@ -1,22 +1,30 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using AppHost.Options;
 
 namespace AppHost.Utils
 {
     public static class AllowedHostsValidator
     {
-        public static void Validate(string serviceName, string serviceRoot)
+        public static void Validate(string serviceName, string serviceRoot, AllowedHostsValidationOptions options = null)
         {
+            options ??= new AllowedHostsValidationOptions();
+
+            if (!options.Enabled)
+            {
+                return; // Skip validation if disabled
+            }
+
             string devConfig = Path.Combine(
                 serviceRoot,
-                "API",
-                "appsettings.Development.json");
+                options.ConfigFileDirectory,
+                options.ConfigFileName);
 
             if (!File.Exists(devConfig))
             {
                 throw new InvalidOperationException(
-                    $"[Aspire] {serviceName}: Missing appsettings.Development.json");
+                    $"[Aspire] {serviceName}: Missing {options.ConfigFileName}");
             }
 
             try
@@ -24,32 +32,46 @@ namespace AppHost.Utils
                 using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(devConfig));
 
                 if (!doc.RootElement.TryGetProperty("AllowedHosts", out JsonElement hosts) ||
-                    hosts.GetString() != "*")
+                    hosts.GetString() != options.RequiredAllowedHostsValue)
                 {
                     throw new InvalidOperationException(
-                        $"[Aspire] {serviceName}: AllowedHosts must be \"*\" for development");
+                        $"[Aspire] {serviceName}: AllowedHosts must be \"{options.RequiredAllowedHostsValue}\" for development");
                 }
             }
             catch (JsonException ex)
             {
                 throw new InvalidOperationException(
-                    $"[Aspire] {serviceName}: Invalid JSON in appsettings.Development.json",
+                    $"[Aspire] {serviceName}: Invalid JSON in {options.ConfigFileName}",
                     ex);
             }
         }
 
-        public static void ValidateAllServices(string servicesRoot)
+        public static void ValidateAllServices(string servicesRoot, AllowedHostsValidationOptions options = null)
         {
+            options ??= new AllowedHostsValidationOptions();
+
+            if (!options.Enabled)
+            {
+                return; // Skip validation if disabled
+            }
+
             foreach (string dir in Directory.GetDirectories(servicesRoot))
             {
                 string name = Path.GetFileName(dir);
-                Validate(name, dir);
+                Validate(name, dir, options);
             }
         }
 
-        internal static void ValidateAllServices(object servicesPath)
+        // Backward compatibility method
+        public static void Validate(string serviceName, string serviceRoot)
         {
-            throw new NotImplementedException();
+            Validate(serviceName, serviceRoot, new AllowedHostsValidationOptions());
+        }
+
+        // Backward compatibility method
+        public static void ValidateAllServices(string servicesRoot)
+        {
+            ValidateAllServices(servicesRoot, new AllowedHostsValidationOptions());
         }
     }
 }

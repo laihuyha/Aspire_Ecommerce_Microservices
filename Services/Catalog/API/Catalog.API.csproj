@@ -14,11 +14,12 @@
         <ProjectReference Include="..\Infrastructure\Catalog.Infrastructure.csproj"/>
     </ItemGroup>
 
-    <!-- Copy HTTPS certificates to output for Docker deployment -->
+    <!-- Copy HTTPS certificates to output and publish for Docker deployment -->
     <ItemGroup>
         <None Include="$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx"
               Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')"
               CopyToOutputDirectory="PreserveNewest"
+              CopyToPublishDirectory="PreserveNewest"
               Link="certs\aspnetapp.pfx"/>
     </ItemGroup>
 

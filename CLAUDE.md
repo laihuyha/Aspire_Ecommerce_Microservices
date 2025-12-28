@@ -18,10 +18,17 @@ dotnet run --project Aspire\AppHost\AppHost.csproj
 # Build specific service
 dotnet build Services\Catalog\API\Catalog.API.csproj
 
-# Deploy to Docker Compose
-cd Aspire\AppHost
-aspire deploy -o ./manifests
-docker compose --env-file ./manifests/.env.Production up -d
+# Deploy to Docker Compose (from project root)
+aspire deploy -o .\
+
+# Start containers
+docker compose up -d
+
+# Stop containers
+docker compose down
+
+# View logs
+docker compose logs -f catalog-api
 ```
 
 ## Architecture
@@ -36,7 +43,10 @@ Aspire/
 │   ├── Services/          # Service definitions (CatalogServiceDefinition, ServiceRegistry)
 │   ├── Extensions/        # Fluent API extensions
 │   ├── Options/           # Configuration options classes
-│   ├── Utils/             # Helpers (ConfigurationMerger, ServiceConfigurationHelper)
+│   ├── Utils/             # Helpers (AppHostConfiguration, PathHelper, SelfSignCertificateSetup)
+│   ├── Constants/         # Path constants
+│   ├── infrastructure.json # Database, Cache, HTTPS certificate config
+│   ├── validation.json    # Certificate setup, allowed hosts validation config
 │   └── AppHost.cs         # Entry point with fluent configuration
 └── ServiceDefaults/       # OpenTelemetry, health checks, resilience patterns
 
@@ -153,8 +163,9 @@ public async Task<IActionResult> Create(CreateProductRequest request)
 6. Add certificate copy in service's `.csproj`:
    ```xml
    <None Include="$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx"
-         Condition="Exists('...')"
+         Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')"
          CopyToOutputDirectory="PreserveNewest"
+         CopyToPublishDirectory="PreserveNewest"
          Link="certs\aspnetapp.pfx"/>
    ```
 

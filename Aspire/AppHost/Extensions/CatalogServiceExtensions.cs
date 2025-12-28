@@ -40,7 +40,9 @@ namespace AppHost.Extensions
 
             // Get configuration options for this service
             var mergedConfig = builder.Configuration;
+#pragma warning disable CS0618 // Type or member is obsolete - keeping for backward compatibility
             var apiOptions = ServiceConfigurationHelper.GetCatalogApiOptions(mergedConfig);
+#pragma warning restore CS0618
             var httpsCertOptions = ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
 
             // External ports: what host exposes (default from env or parameter)

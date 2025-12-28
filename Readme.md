@@ -25,6 +25,19 @@ aspire deploy -o ./manifests
 docker compose --env-file ./manifests/.env.Production up -d
 ```
 
+## 🧹 Clean up resources
+
+After deploying your application, it's important to clean up resources to avoid incurring unnecessary costs or consuming local system resources.
+
+### Docker Compose
+To clean up resources after deploying with Docker Compose, you can stop and remove the running containers using the following command:
+
+```bash
+# Aspire CLI - Stop and remove containers
+aspire do docker-compose-down-{environmentName}
+example: environmentName = "aspire-ecommerce" => aspire do docker-compose-down-aspire-ecommerce || docker compose --env-file .env.{Environment} down
+```
+
 ## 📁 Solution Structure
 
 ```

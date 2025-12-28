@@ -28,7 +28,8 @@ public abstract class ServiceDefinitionBase : IServiceDefinition
     /// </summary>
     protected ServicePortOptions GetPortOptions(IDistributedApplicationBuilder builder)
     {
-        return ServiceConfigurationHelper.GetServicePortOptions(builder.Configuration, ServiceName)
+        var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+        return ServiceConfigurationHelper.GetServicePortOptions(mergedConfig, ServiceName)
                ?? new ServicePortOptions();
     }
 
@@ -37,7 +38,8 @@ public abstract class ServiceDefinitionBase : IServiceDefinition
     /// </summary>
     protected static HttpsCertificateOptions GetHttpsCertificateOptions(IDistributedApplicationBuilder builder)
     {
-        return ServiceConfigurationHelper.GetHttpsCertificateOptions(builder.Configuration);
+        var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+        return ServiceConfigurationHelper.GetHttpsCertificateOptions(mergedConfig);
     }
 
     /// <summary>

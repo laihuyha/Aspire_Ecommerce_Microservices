@@ -18,7 +18,7 @@ namespace AppHost.Extensions
             this IDistributedApplicationBuilder builder)
         {
             // Get configuration options for the cache
-            var mergedConfig = builder.Configuration;
+            var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
             var options = ServiceConfigurationHelper.GetCacheOptions(mergedConfig);
 
             return builder.AddRedis("distributedcache")
@@ -39,7 +39,7 @@ namespace AppHost.Extensions
             var cache = builder.AddCatalogCache();
 
             // Get configuration options for this service
-            var mergedConfig = builder.Configuration;
+            var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
 #pragma warning disable CS0618 // Type or member is obsolete - keeping for backward compatibility
             var apiOptions = ServiceConfigurationHelper.GetCatalogApiOptions(mergedConfig);
 #pragma warning restore CS0618

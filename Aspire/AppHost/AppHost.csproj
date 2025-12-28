@@ -19,4 +19,10 @@
         <ProjectReference Include="..\..\Services\Catalog\API\Catalog.API.csproj" />
     </ItemGroup>
 
+    <!-- Copy configuration files to output -->
+    <ItemGroup>
+        <None Include="validation.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="infrastructure.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

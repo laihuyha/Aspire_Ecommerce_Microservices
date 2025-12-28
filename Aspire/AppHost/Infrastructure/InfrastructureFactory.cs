@@ -37,7 +37,8 @@ public sealed class InfrastructureFactory : IInfrastructureFactory
                 return existing;
             }
 
-            var options = ServiceConfigurationHelper.GetServiceDatabaseOptions(builder.Configuration, serviceName);
+            var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+            var options = ServiceConfigurationHelper.GetServiceDatabaseOptions(mergedConfig, serviceName);
             ValidateDatabaseOptions(options, serviceName);
 
             var username = builder.AddParameter($"{serviceName}Username",
@@ -73,7 +74,8 @@ public sealed class InfrastructureFactory : IInfrastructureFactory
                 return existing;
             }
 
-            var options = ServiceConfigurationHelper.GetCacheOptions(builder.Configuration);
+            var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+            var options = ServiceConfigurationHelper.GetCacheOptions(mergedConfig);
             ValidateCacheOptions(options);
 
             var cache = builder.AddRedis(cacheName)

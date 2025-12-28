@@ -45,7 +45,8 @@ public static class DistributedApplicationBuilderExtensions
     /// </summary>
     public static IDistributedApplicationBuilder WithAllowedHostsValidation(this IDistributedApplicationBuilder builder)
     {
-        var options = ServiceConfigurationHelper.GetAllowedHostsValidationOptions(builder.Configuration);
+        var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+        var options = ServiceConfigurationHelper.GetAllowedHostsValidationOptions(mergedConfig);
         AllowedHostsValidator.ValidateAllServices(Constants.ServicesPath, options);
         return builder;
     }
@@ -56,7 +57,8 @@ public static class DistributedApplicationBuilderExtensions
     public static IDistributedApplicationBuilder WithHttpsCertificateSetup(this IDistributedApplicationBuilder builder)
     {
         string projectRoot = PathHelper.GetProjectRootPathFromBaseDirectory();
-        var certificateOptions = ServiceConfigurationHelper.GetCertificateSetupOptions(builder.Configuration);
+        var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
+        var certificateOptions = ServiceConfigurationHelper.GetCertificateSetupOptions(mergedConfig);
         SelfSignCertificateSetup.SetupIfEnabled(certificateOptions, projectRoot);
         return builder;
     }

@@ -19,7 +19,7 @@ namespace AppHost
             string databaseName)
         {
             // Get configuration options for this database service
-            var mergedConfig = builder.Configuration;
+            var mergedConfig = AppHostConfiguration.GetMergedConfiguration(builder.Configuration);
             var options = ServiceConfigurationHelper.GetServiceDatabaseOptions(mergedConfig, serviceName);
 
             // For now, only support PostgreSQL as that's what's available in Aspire

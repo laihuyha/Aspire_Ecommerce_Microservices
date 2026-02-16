@@ -69,14 +69,36 @@ public abstract class ServiceDefinitionBase : IServiceDefinition
     }
 
     /// <summary>
-    /// Configures HTTP endpoints with external and internal port mapping
+    /// Configures HTTP endpoints with external and internal port mapping.
+    /// Fix for Aspire 9.4+: When IsProxied=true, Port and TargetPort cannot be the same.
     /// </summary>
     protected IResourceBuilder<ProjectResource> ConfigureEndpoints(
         IResourceBuilder<ProjectResource> projectBuilder,
         ServicePortOptions portOptions)
     {
-        return projectBuilder
-            .WithHttpEndpoint(portOptions.ExternalHttpPort ?? portOptions.InternalHttpPort, portOptions.InternalHttpPort, $"{ServiceName}-http")
-            .WithHttpsEndpoint(portOptions.ExternalHttpsPort ?? portOptions.InternalHttpsPort, portOptions.InternalHttpsPort, $"{ServiceName}-https");
+        // Calculate external ports (fallback to internal if not specified)
+        var httpExternal = portOptions.ExternalHttpPort ?? portOptions.InternalHttpPort;
+        var httpsExternal = portOptions.ExternalHttpsPort ?? portOptions.InternalHttpsPort;
+
+        // Only specify targetPort if external != internal to avoid Aspire 9.4+ proxy error
+        if (httpExternal == portOptions.InternalHttpPort)
+        {
+            projectBuilder = projectBuilder.WithHttpEndpoint(httpExternal, name: $"{ServiceName}-http");
+        }
+        else
+        {
+            projectBuilder = projectBuilder.WithHttpEndpoint(httpExternal, portOptions.InternalHttpPort, $"{ServiceName}-http");
+        }
+
+        if (httpsExternal == portOptions.InternalHttpsPort)
+        {
+            projectBuilder = projectBuilder.WithHttpsEndpoint(httpsExternal, name: $"{ServiceName}-https");
+        }
+        else
+        {
+            projectBuilder = projectBuilder.WithHttpsEndpoint(httpsExternal, portOptions.InternalHttpsPort, $"{ServiceName}-https");
+        }
+
+        return projectBuilder;
     }
 }

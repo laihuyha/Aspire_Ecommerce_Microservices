@@ -18,24 +18,79 @@ cd Aspire_Ecommerce_Microservices
 
 # Run with .NET Aspire (recommended for development)
 dotnet run --project Aspire/AppHost/AppHost.csproj
-
-# Or deploy to Docker Compose for production-like environment
-cd Aspire/AppHost
-aspire deploy -o ./manifests
-docker compose --env-file ./manifests/.env.Production up -d
 ```
 
-## 🧹 Clean up resources
+### Deployment Options
 
-After deploying your application, it's important to clean up resources to avoid incurring unnecessary costs or consuming local system resources.
+The project supports two deployment workflows to accommodate different use cases:
 
-### Docker Compose
-To clean up resources after deploying with Docker Compose, you can stop and remove the running containers using the following command:
+#### Option 1: Direct Mode (Default) - One-Step Deployment
+
+**Best for:** Local development, rapid iteration, quick testing
+
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-direct.ps1
+
+# Linux/macOS (Bash)
+./scripts/deploy-direct.sh
+
+# Or with Aspire CLI
+aspire deploy -o .\
+```
+
+This will build and deploy all services in one integrated step.
+
+#### Option 2: Artifacts Mode - Two-Step Deployment
+
+**Best for:** CI/CD pipelines, multiple environments, production deployment
+
+**Step 1: Publish Artifacts**
+```powershell
+# Windows (PowerShell)
+.\scripts\publish-artifacts.ps1 artifacts
+
+# Linux/macOS (Bash)
+./scripts/publish-artifacts.sh artifacts
+
+# Or with Aspire CLI
+aspire publish -o artifacts/
+```
+
+This generates deployment artifacts including `docker-compose.yml`, manifests, and configuration files.
+
+**Step 2: Deploy from Artifacts**
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-from-artifacts.ps1 artifacts dev
+
+# Linux/macOS (Bash)
+./scripts/deploy-from-artifacts.sh artifacts dev
+
+# Or with Docker Compose directly
+docker compose -f artifacts/docker-compose.yml up -d --build
+```
+
+**Switching Modes:** Edit `Aspire/AppHost/validation.json` and set `"DeploymentMode": { "Mode": "artifacts" }`
+
+## 🧹 Clean up Resources
+
+After deploying your application, clean up resources to free up system resources:
+
+### Stop and Remove Containers
 
 ```bash
-# Aspire CLI - Stop and remove containers
-aspire do docker-compose-down-{environmentName}
-example: environmentName = "aspire-ecommerce" => aspire do docker-compose-down-aspire-ecommerce || docker compose --env-file .env.{Environment} down
+# For direct mode deployment
+docker compose down
+
+# For artifacts mode deployment
+docker compose -f artifacts/docker-compose.yml down
+
+# Remove volumes and networks as well
+docker compose down -v
+
+# View running containers
+docker compose ps
 ```
 
 ## 📁 Solution Structure

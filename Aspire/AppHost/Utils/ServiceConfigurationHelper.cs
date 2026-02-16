@@ -108,4 +108,13 @@ public static class ServiceConfigurationHelper
         return config.GetSection("AllowedHostsValidation").Get<AllowedHostsValidationOptions>()
                ?? new AllowedHostsValidationOptions();
     }
+
+    /// <summary>
+    /// Gets deployment mode options from merged configuration.
+    /// </summary>
+    public static DeploymentModeOptions GetDeploymentModeOptions(IConfiguration config)
+    {
+        return config.GetSection("DeploymentMode").Get<DeploymentModeOptions>()
+               ?? new DeploymentModeOptions();
+    }
 }

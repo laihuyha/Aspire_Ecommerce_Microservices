@@ -8,6 +8,8 @@ Microservices-based e-commerce platform built with .NET 9.0, .NET Aspire, Clean 
 
 ## Build and Run Commands
 
+### Basic Build
+
 ```powershell
 # Build the entire solution
 dotnet build Aspire\AppHost.sln
@@ -17,18 +19,96 @@ dotnet run --project Aspire\AppHost\AppHost.csproj
 
 # Build specific service
 dotnet build Services\Catalog\API\Catalog.API.csproj
+```
 
-# Deploy to Docker Compose (from project root)
+### Deployment Workflows
+
+The project supports two deployment workflows:
+
+#### 1. Direct Mode (Default) - One-Step Deployment
+
+**Best for:** Local development, rapid iteration, prototyping
+
+**Commands:**
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-direct.ps1
+
+# Linux/macOS (Bash)
+./scripts/deploy-direct.sh
+
+# Or directly with Aspire CLI
 aspire deploy -o .\
+```
 
-# Start containers
+**Flow:** Build → Deploy in one integrated step
+
+#### 2. Artifacts Mode - Two-Step Deployment
+
+**Best for:** CI/CD pipelines, multiple environments, production deployment
+
+**Step 1 - Publish Artifacts:**
+```powershell
+# Windows (PowerShell)
+.\scripts\publish-artifacts.ps1 artifacts
+
+# Linux/macOS (Bash)
+./scripts/publish-artifacts.sh artifacts
+
+# Or directly with Aspire CLI
+aspire publish -o artifacts/
+```
+
+This generates:
+- `docker-compose.yml` - Base deployment configuration
+- `docker-compose.override.yml` - Optional overrides
+- `aspire-manifest.json` - Deployment manifest
+- `.env` - Environment variables
+- `parameters.json` - Deployment parameters
+
+**Step 2 - Deploy from Artifacts:**
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-from-artifacts.ps1 artifacts dev
+
+# Linux/macOS (Bash)
+./scripts/deploy-from-artifacts.sh artifacts dev
+
+# Or directly with Docker Compose
+docker compose -f artifacts/docker-compose.yml up -d --build
+```
+
+**Switching Between Modes:**
+
+Edit `Aspire/AppHost/validation.json`:
+```json
+{
+  "DeploymentMode": {
+    "Mode": "direct"    // or "artifacts"
+  }
+}
+```
+
+### Docker Management
+
+```powershell
+# Start containers (direct mode)
 docker compose up -d
 
 # Stop containers
 docker compose down
 
-# View logs
+# View logs (all services)
+docker compose logs -f
+
+# View logs (specific service)
 docker compose logs -f catalog-api
+
+# Restart services
+docker compose restart
+
+# View container status
+docker compose ps
 ```
 
 ## Architecture

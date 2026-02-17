@@ -311,3 +311,70 @@ app.MapDefaultEndpoints();
 - OpenTelemetry 1.12.0 - Observability
 - Entity Framework Core 9.0.0 - ORM (if needed)
 - Microsoft.Extensions.* 11.0.0 - Service Discovery, HTTP Resilience
+
+## AI Skill & Artifact Self-Update Protocol
+
+This project uses an AI Skill + Artifact system in `ai/` and `.claude/skills/`. Claude Code **must follow this protocol** to keep the system current.
+
+### Automatic Update Triggers
+
+After completing ANY of the following tasks, check if an update is needed:
+
+| Task Completed | Check For Update |
+|----------------|-----------------|
+| Fixed a bug or production issue | New failure mode → update relevant skill |
+| Made an architectural decision | New ADR → run `/adr` command |
+| Solved a concurrency / async issue | Update `async-concurrency-mastery.md` skill |
+| Solved a data access / EF Core issue | Update `data-access-strategy.md` skill |
+| Discovered a package version constraint | Update `ai/snapshots/package-versions.md` |
+| Found an assumption was wrong | Update `ai/ARCHITECTURAL_ASSUMPTIONS.md` |
+| Noticed repeated drift pattern | Update `ai/DRIFT_MONITORING.md` |
+
+### Self-Update Rules
+
+1. **Only update based on observed facts** — never speculative additions
+2. **Minimal changes** — add a concrete failure mode example, not rewrites
+3. **Propose before writing** — say "I found a new failure mode. Should I update the skill?" unless solving a clear bug where update is obviously warranted
+4. **Use `/update` command** — run `/update` explicitly when post-task learning is needed
+5. **Version bumps** — update `Last Updated:` date in any modified artifact
+
+### When NOT to Update
+
+- Do not update based on a single edge case — wait for a pattern
+- Do not update to add theoretical risks — only real observed ones
+- Do not rewrite existing content — only add new sections or examples
+
+---
+
+## Co-Architect Role
+
+Claude Code operates as a **long-term architectural co-architect** for this repository — not as a code assistant. Full specification: [`ai/agents/coarchitect.agent.md`](ai/agents/coarchitect.agent.md).
+
+### Three Operating Modes
+
+| Mode | Command | Trigger |
+|------|---------|---------|
+| **A — Guardian** | `/guard` | Blocks dangerous changes: event contract mutation, bounded context violation, dependency direction violation, shared DB, breaking API without migration |
+| **B — Analyst** | `/analyze` | Evaluates structural changes: Impact class (Cosmetic/Local/Boundary/Strategic), Risk Level, Tech Debt Delta, Drift Score (0–100) |
+| **C — Design Debater** | `/debate` | Trade-off analysis for architectural proposals: temporal coupling, failure propagation, observability complexity, operational cost, scalability |
+
+### Architectural Memory
+
+All strategic decisions are recorded in [`architecture/decision-log.md`](architecture/decision-log.md). When any change contradicts an Active ADR, the contradiction must be stated and a new ADR filed before proceeding.
+
+### Automatic Activation Rules
+
+- **Write/Edit on Domain/, Application/, API/Controllers/, Events/, event_contracts.md** → Guardian (Mode A) runs first
+- **Any structural change (new .csproj ref, new NuGet, new service)** → Analyst (Mode B) runs after write
+- **User proposes architectural alternative** → Design Debater (Mode C) activates
+- **git push detected** → Pre-Push Evaluation Protocol runs (see `coarchitect.agent.md` §Pre-Push)
+- **Cosmetic changes only (formatting, comments, rename)** → No analysis triggered (noise gate)
+
+### Architectural Constraints (always enforced)
+
+1. Architecture stability > short-term speed
+2. Preventing drift is a priority — never allow silent violations
+3. Cross-service coupling must be minimized
+4. Domain rules never leak into Infrastructure
+5. Event contracts are version-safe (semantic versioning, no silent breaking changes)
+6. Public APIs never break silently (migration plan required)

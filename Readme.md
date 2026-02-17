@@ -5,7 +5,7 @@ A modular, production-grade microservices solution for ecommerce, built with .NE
 ## 🚀 Quick Start
 
 ### Prerequisites
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://docker.com) and Docker Compose
 - Visual Studio 2022+ or VS Code
 
@@ -79,19 +79,18 @@ After deploying your application, clean up resources to free up system resources
 
 ### Stop and Remove Containers
 
-```bash
-# For direct mode deployment
-docker compose down
+```powershell
+# Direct mode — auto-detects project name (recommended)
+.\scripts\stop.ps1
 
-# For artifacts mode deployment
-docker compose -f artifacts/docker-compose.yml down
+# View logs
+.\scripts\stop.ps1 -Logs
 
-# Remove volumes and networks as well
-docker compose down -v
-
-# View running containers
-docker compose ps
+# Artifacts mode
+docker compose -f Aspire/docker-compose.yaml down
 ```
+
+> **Note:** `aspire deploy` generates a random project name hash. Use `scripts/stop.ps1` instead of plain `docker compose down` to avoid missing containers. See [CLAUDE.md](CLAUDE.md) for full Docker management commands.
 
 ## 📁 Solution Structure
 
@@ -122,10 +121,10 @@ Aspire_Ecommerce_Microservices/
 ## 📚 Documentation
 
 ### Core Documentation
-- **[HTTPS Certificate Setup](https-certificate-setup.md)** - Complete guide for production-like HTTPS with Docker
-- **[Service Configuration Examples](service-configuration-examples.md)** - How services configure themselves
-- **[Adding New Services](adding-new-services.md)** - Step-by-step guide for new microservices
-- **[Multi-Database Architecture](multi-database-architecture.md)** - Different database types per service
+- **[HTTPS Certificate Setup](Documents/https-certificate-setup.md)** - Complete guide for production-like HTTPS with Docker
+- **[Service Configuration Examples](Documents/service-configuration-examples.md)** - How services configure themselves
+- **[Adding New Services](Documents/adding-new-services.md)** - Step-by-step guide for new microservices
+- **[Multi-Database Architecture](Documents/multi-database-architecture.md)** - Different database types per service
 
 ### Key Features
 - **Configuration Merging**: Services can override global settings while inheriting defaults
@@ -138,8 +137,8 @@ Aspire_Ecommerce_Microservices/
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| **.NET Aspire** | 9.4.2 | Cloud-native orchestration |
-| **ASP.NET Core** | 9.0 | Web API framework |
+| **.NET Aspire** | 13.1.1 | Cloud-native orchestration |
+| **ASP.NET Core** | 10.0 | Web API framework |
 | **MediatR** | 12.5.0 | CQRS messaging |
 | **Marten** | 8.11.0 | Document DB & Event Store |
 | **PostgreSQL** | 16.4 | Primary database |

@@ -378,3 +378,127 @@ All strategic decisions are recorded in [`architecture/decision-log.md`](archite
 4. Domain rules never leak into Infrastructure
 5. Event contracts are version-safe (semantic versioning, no silent breaking changes)
 6. Public APIs never break silently (migration plan required)
+
+## Governance Agent System
+
+Claude Code uses an **autonomous governance agent system** to review code changes. Agents are spawned via the Task tool (`subagent_type: "general-purpose"`) and run in parallel.
+
+### Agent Files Location
+
+All governance agents are in [`.claude/agents/`](.claude/agents/):
+
+| File | Agent | Authority | Mode |
+|------|-------|-----------|------|
+| `security.md` | Security | Rank 1 — Universal VETO | Blocks forbidden security patterns |
+| `architect.md` | Architect | Rank 2 — Structural VETO | Blocks forbidden dependencies & CQRS violations |
+| `project-integrity.md` | Project Integrity | Rank 3 — Project VETO | Blocks package/technology violations |
+| `coding-standards.md` | Coding Standards | Rank 4 — ENFORCE | Blocks style/pattern violations |
+| `observability.md` | Observability | Rank 5 — ENFORCE | Blocks missing telemetry on new services |
+| `devops.md` | DevOps | Rank 6 — ENFORCE | Blocks deployment-breaking config errors |
+| `performance.md` | Performance | Rank 7 — ADVISORY | Recommendations on query/cache patterns |
+| `refactoring.md` | Refactoring | Rank 8 — ADVISORY | Technical debt tracking (scheduled, not per-PR) |
+| `orchestrator.md` | Orchestrator | META | Determines mode, spawns correct agents, collects verdicts |
+
+### How Claude Invokes Agents
+
+**When making code changes**, Claude must:
+
+1. **Identify mode** using `ai/agents/INVOCATION_STRATEGY.md`:
+   - **Light:** ≤ 3 files, single layer, no new deps → only agents [1] and [4]
+   - **Standard:** Feature spanning 2–3 layers → agents [1], [2], [4] + conditional [3,5,6]
+   - **Strict:** New service, new AppHost resource, > 10 files → all 8 agents
+
+2. **Spawn agents** via Task tool (parallel where possible):
+   ```
+   Task(subagent_type: "general-purpose",
+        prompt: [content of .claude/agents/{agent}.md] + "\n\nFiles to review:\n" + [file list])
+   ```
+
+3. **Gate execution** (sequential for blockers):
+   - Security [1] → Architect [2] → Project Integrity [3] → then remaining in parallel
+   - If any VETO: STOP. Do not proceed with the change.
+
+4. **Output** the `[AGENT INVOCATION LOG]` at the end of each review.
+
+### Triggering the Orchestrator
+
+To run a full governance review on current changes:
+```
+Task(subagent_type: "general-purpose",
+     prompt: [content of .claude/agents/orchestrator.md] + "\n\nChange description: ...\nChanged files:\n- ...")
+```
+
+Or use the Co-Architect slash commands for specific modes:
+- `/guard` — Mode A Guardian (high-level structural protection)
+- `/analyze` — Mode B Analyst (impact classification)
+- `/debate` — Mode C Design Debater (trade-off analysis)
+
+### Invocation Strategy Reference
+
+Full rules in [`ai/agents/INVOCATION_STRATEGY.md`](ai/agents/INVOCATION_STRATEGY.md).
+Full conflict resolution in [`ai/agents/RUNTIME_EXECUTION_MODEL.md`](ai/agents/RUNTIME_EXECUTION_MODEL.md).
+
+## Self-Grow (Self-Learning) System
+
+The governance system **learns from every review** and improves agent prompts over time. This is the feedback loop that closes the cycle.
+
+### The Self-Grow Loop
+
+```
+Code change
+    │
+    ▼
+Governance Review (Orchestrator → Agents [1–8])
+    │
+    ▼
+[AGENT INVOCATION LOG] produced
+    │
+    ▼  (always, automatic)
+Learning Capture Agent (.claude/agents/learning-capture.md)
+    │
+    ├── Captures: what was blocked/recommended + why
+    ├── Updates: ai/experimental/patterns/accumulator.md
+    │           (increments count for each observed pattern)
+    │
+    ├── Pattern count = 1–2 → Accumulating (no action)
+    ├── Pattern count ≥ 3   → PROPAGATION ELIGIBLE
+    │
+    ▼
+Knowledge Propagation Engine (ai/agents/KNOWLEDGE_PROPAGATION_ENGINE.md)
+    │
+    ├── Low risk (severity MEDIUM, count 3+)  → AutoApproved → update agent prompt
+    ├── High risk (severity CRITICAL, count 3+) → UserApproval required
+    │
+    ▼
+Agent prompt updated (.claude/agents/{agent}.md)
+    │
+    ▼
+Next review: agent catches the pattern FASTER
+```
+
+### Storage
+
+| File | Purpose |
+|------|---------|
+| [`ai/experimental/patterns/accumulator.md`](ai/experimental/patterns/accumulator.md) | Pattern registry with counts — the "memory" |
+| [`ai/experimental/patterns/learning-log.md`](ai/experimental/patterns/learning-log.md) | Per-review learning log — what was captured each time |
+
+### Learning Capture Agent
+
+[`.claude/agents/learning-capture.md`](.claude/agents/learning-capture.md) — Spawned automatically by orchestrator after every review. Reads the AGENT INVOCATION LOG, updates accumulator, triggers propagation when threshold reached.
+
+### Self-Assessment Metric
+
+Each learning capture run calculates the **Governance Health Score**:
+- `% of today's violations that were previously known patterns`
+- **< 20%**: Mostly new violations — agents are learning actively
+- **20–50%**: Healthy mix of known and new patterns
+- **> 50%**: Recurring known patterns — agent prompts need strengthening → consider running `/update`
+
+### Manual Learning Trigger
+
+When you want to force a learning pass after a complex task:
+```
+/update
+```
+This triggers the full Post-Task Learning Loop from `.claude/commands/update.md`.

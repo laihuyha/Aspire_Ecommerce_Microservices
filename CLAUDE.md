@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Microservices-based e-commerce platform built with .NET 9.0, .NET Aspire, Clean Architecture, and CQRS pattern using MediatR. Currently implements a Catalog service with plans for Basket and Order services.
+Microservices-based e-commerce platform built with .NET 10.0, .NET Aspire, Clean Architecture, and CQRS pattern using MediatR. Currently implements a Catalog service with plans for Basket and Order services.
 
 ## Build and Run Commands
 
@@ -198,7 +198,7 @@ public async Task<IActionResult> Create(CreateProductRequest request)
 - `ImplicitUsings`: **disabled** - always include explicit `using` statements
 - `Nullable`: **disabled**
 - `TreatWarningsAsErrors`: **enabled** - code must be warning-free
-- Target Framework: `net9.0`
+- Target Framework: `net10.0`
 
 **Directory.Packages.props:** Centralized NuGet package version management
 
@@ -297,9 +297,12 @@ app.MapDefaultEndpoints();
 
 ## Technology Stack
 
-- .NET Aspire 9.4.2 - Cloud-native orchestration
+- .NET 10.0 - Latest .NET runtime
+- .NET Aspire 13.1.1 - Cloud-native orchestration
 - MediatR 12.5.0 - CQRS messaging
 - Marten 8.11.0 - Document database on PostgreSQL
 - Mapster 7.4.0 - Object mapping
 - FluentValidation 12.1.1 - Request validation
 - OpenTelemetry 1.12.0 - Observability
+- Entity Framework Core 9.0.0 - ORM (if needed)
+- Microsoft.Extensions.* 11.0.0 - Service Discovery, HTTP Resilience

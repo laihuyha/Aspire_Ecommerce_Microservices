@@ -91,24 +91,29 @@ Edit `Aspire/AppHost/validation.json`:
 
 ### Docker Management
 
+> **Note:** `aspire deploy` generates a project name with a random hash (e.g. `aspire-aspire-ecommerce-b3ce5819`).
+> Plain `docker compose down` won't find those containers. Use `scripts/stop.ps1` instead — it auto-detects the project name.
+> The project name is saved to `Aspire/.aspire-project` after each deployment.
+
 ```powershell
-# Start containers (direct mode)
-docker compose up -d
+# ── Direct mode (after running deploy-direct.ps1) ──────────────────────────
+# Stop containers (auto-detects project name)
+.\scripts\stop.ps1
 
-# Stop containers
-docker compose down
+# View logs
+.\scripts\stop.ps1 -Logs
 
-# View logs (all services)
-docker compose logs -f
+# Restart
+.\scripts\stop.ps1 -Restart
 
-# View logs (specific service)
-docker compose logs -f catalog-api
+# Show status
+.\scripts\stop.ps1 -Status
 
-# Restart services
-docker compose restart
-
-# View container status
-docker compose ps
+# ── Artifacts mode (after running deploy-from-artifacts.ps1) ──────────────
+# Project name is fixed by docker-compose.yaml name: "aspire-ecommerce"
+docker compose -f Aspire/docker-compose.yaml down
+docker compose -f Aspire/docker-compose.yaml logs -f
+docker compose -f Aspire/docker-compose.yaml ps
 ```
 
 ## Architecture

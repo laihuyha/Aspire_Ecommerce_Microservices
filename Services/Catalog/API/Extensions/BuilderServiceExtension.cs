@@ -1,5 +1,5 @@
 using BuildingBlocks.CQRS.Behaviors;
-using Catalog.Api.Filters;
+using BuildingBlocks.Errors;
 using Catalog.Domain.Aggregates.Product;
 using Catalog.Domain.Interfaces;
 using Catalog.Infrastructure.Configurations;
@@ -19,8 +19,12 @@ public static class BuilderServiceExtension
     public static IServiceCollection AddCatalogServices(this IServiceCollection services, WebApplicationBuilder builder)
     {
         // API Controllers and related services
-        services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
+        services.AddControllers();
         services.AddEndpointsApiExplorer();
+        
+        // Global Exception Handler
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
         // Swagger configuration
         services.AddSwaggerGen(c =>

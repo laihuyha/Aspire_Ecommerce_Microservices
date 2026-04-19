@@ -150,13 +150,26 @@ namespace Catalog.Infrastructure.UnitOfWork
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
             if (!_disposed)
             {
-                _documentSession?.Dispose();
+                if (disposing)
+                {
+                    _documentSession?.Dispose();
+                }
+
                 _disposed = true;
             }
+        }
 
-            GC.SuppressFinalize(this);
+        ~MartenUnitOfWork()
+        {
+            Dispose(false);
         }
     }
 

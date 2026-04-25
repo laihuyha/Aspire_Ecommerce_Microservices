@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Catalog.Domain.Specifications
+namespace BuildingBlocks.Common
 {
     /// <summary>
     ///     Represents a paginated result set.

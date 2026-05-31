@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using BuildingBlocks.Specifications;
 using Catalog.Domain.Aggregates.Product;
 
 namespace Catalog.Domain.Specifications
@@ -20,7 +21,7 @@ namespace Catalog.Domain.Specifications
     {
         public ProductByNameSpecification(string name) : base(p => p.Name.Contains(name))
         {
-            AddOrderBy(p => p.Name);
+            ApplyOrderBy(p => p.Name);
         }
     }
 
@@ -29,7 +30,7 @@ namespace Catalog.Domain.Specifications
         public ProductByCategorySpecification(Guid categoryId) : base(p =>
             p.Categories.Any(c => c.CategoryId == categoryId))
         {
-            AddOrderBy(p => p.Name);
+            ApplyOrderBy(p => p.Name);
         }
     }
 
@@ -37,42 +38,48 @@ namespace Catalog.Domain.Specifications
     {
         public ProductInStockSpecification() : base(p => p.IsInStock())
         {
-            AddOrderBy(p => p.Name);
+            ApplyOrderBy(p => p.Name);
         }
     }
 
     public class ProductByPriceRangeSpecification : BaseSpecification<Product>
     {
-        public ProductByPriceRangeSpecification(decimal? minPrice, decimal? maxPrice)
+        public ProductByPriceRangeSpecification(decimal? minPrice, decimal? maxPrice) : base(BuildCriteria(minPrice, maxPrice))
         {
-            // Complex criteria for price filtering
-            Expression<Func<Product, bool>> criteria = p => true; // Default to all
+            ApplyOrderBy(p => p.GetEffectivePrice());
+        }
 
+        private static Expression<Func<Product, bool>> BuildCriteria(decimal? minPrice, decimal? maxPrice)
+        {
             if (minPrice.HasValue && maxPrice.HasValue)
             {
-                criteria = p => p.GetEffectivePrice() >= minPrice.Value && p.GetEffectivePrice() <= maxPrice.Value;
-            }
-            else if (minPrice.HasValue)
-            {
-                criteria = p => p.GetEffectivePrice() >= minPrice.Value;
-            }
-            else if (maxPrice.HasValue)
-            {
-                criteria = p => p.GetEffectivePrice() <= maxPrice.Value;
+                return p => p.GetEffectivePrice() >= minPrice.Value && p.GetEffectivePrice() <= maxPrice.Value;
             }
 
-            // Apply the criteria
-            ApplyCriteria(criteria);
-            AddOrderBy(p => p.GetEffectivePrice());
+            if (minPrice.HasValue)
+            {
+                return p => p.GetEffectivePrice() >= minPrice.Value;
+            }
+
+            if (maxPrice.HasValue)
+            {
+                return p => p.GetEffectivePrice() <= maxPrice.Value;
+            }
+
+            return p => true;
         }
     }
 
     public class ProductSearchSpecification : BaseSpecification<Product>
     {
         public ProductSearchSpecification(string searchTerm, Guid? categoryId, decimal? minPrice, decimal? maxPrice,
-            bool inStockOnly)
+            bool inStockOnly) : base(BuildCriteria(searchTerm, categoryId, minPrice, maxPrice, inStockOnly))
         {
-            // Build complex search criteria
+            ApplyOrderBy(p => p.Name);
+        }
+
+        private static Expression<Func<Product, bool>> BuildCriteria(string searchTerm, Guid? categoryId, decimal? minPrice, decimal? maxPrice, bool inStockOnly)
+        {
             Expression<Func<Product, bool>> criteria = p => true;
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -99,8 +106,7 @@ namespace Catalog.Domain.Specifications
                 criteria = CombineCriteria(criteria, stockCriteria);
             }
 
-            ApplyCriteria(criteria);
-            AddOrderBy(p => p.Name);
+            return criteria;
         }
 
         private static Expression<Func<Product, bool>> BuildSearchCriteria(string searchTerm)
@@ -152,7 +158,7 @@ namespace Catalog.Domain.Specifications
     {
         public ProductWithVariantsSpecification() : base(p => p.Variants.Any())
         {
-            AddOrderBy(p => p.Name);
+            ApplyOrderBy(p => p.Name);
         }
     }
 

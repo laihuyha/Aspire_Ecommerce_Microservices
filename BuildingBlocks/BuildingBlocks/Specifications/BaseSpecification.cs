@@ -33,44 +33,44 @@ namespace BuildingBlocks.Specifications
         public bool IsPagingEnabled { get; private set; }
         public bool IsTrackingEnabled { get; private set; } = true;
 
-        protected void AddInclude(Expression<Func<T, object>> includeExpression)
+        public void AddInclude(Expression<Func<T, object>> includeExpression)
         {
             Includes.Add(includeExpression);
         }
 
-        protected void AddInclude(string includeString)
+        public void AddInclude(string includeString)
         {
             IncludeStrings.Add(includeString);
         }
 
-        protected void ApplyOrderBy(Expression<Func<T, object>> orderByExpression)
+        public void ApplyOrderBy(Expression<Func<T, object>> orderByExpression)
         {
             OrderBy = orderByExpression;
         }
 
-        protected void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
+        public void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
         {
             OrderByDescending = orderByDescendingExpression;
         }
 
-        protected void AddThenBy(Expression<Func<T, object>> thenByExpression)
+        public void AddThenBy(Expression<Func<T, object>> thenByExpression)
         {
             ThenBy.Add(thenByExpression);
         }
 
-        protected void AddThenByDescending(Expression<Func<T, object>> thenByDescendingExpression)
+        public void AddThenByDescending(Expression<Func<T, object>> thenByDescendingExpression)
         {
             ThenByDescending.Add(thenByDescendingExpression);
         }
 
-        protected void ApplyPaging(int skip, int take)
+        public void ApplyPaging(int skip, int take)
         {
             Skip = skip;
             Take = take;
             IsPagingEnabled = true;
         }
 
-        protected void ApplyTracking(bool tracking)
+        public void ApplyTracking(bool tracking)
         {
             IsTrackingEnabled = tracking;
         }

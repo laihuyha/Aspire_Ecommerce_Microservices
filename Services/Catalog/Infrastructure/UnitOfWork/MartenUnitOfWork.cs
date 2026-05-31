@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildingBlocks.Common;
+using BuildingBlocks.Specifications;
 using Catalog.Domain.Aggregates.Product;
 using Catalog.Domain.Entities;
 using Catalog.Domain.Interfaces;

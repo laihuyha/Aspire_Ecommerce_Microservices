@@ -33,6 +33,7 @@
         <PackageVersion Include="MediatR" Version="12.5.0"/>
         <PackageVersion Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="12.5.0"/>
         <PackageVersion Include="Marten" Version="9.3.4"/>
+        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2"/>
         <!-- #endregion -->
 
     </ItemGroup>

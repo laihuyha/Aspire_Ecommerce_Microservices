@@ -11,7 +11,6 @@ using Catalog.Domain.Entities;
 using Catalog.Domain.Interfaces;
 using Catalog.Domain.Specifications;
 using Catalog.Domain.ValueObjects;
-using Marten;
 using MediatR;
 
 namespace Catalog.Application.Commands

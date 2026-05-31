@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Category;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Commands
 {
@@ -17,17 +17,17 @@ namespace Catalog.Application.Commands
 
     public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryCommand, UpdateCategoryCommandResponse>
     {
-        private readonly IDocumentSession _documentSession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateCategoryCommandHandler(IDocumentSession documentSession)
+        public UpdateCategoryCommandHandler(IUnitOfWork unitOfWork)
         {
-            _documentSession = documentSession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<UpdateCategoryCommandResponse> Handle(UpdateCategoryCommand command,
             CancellationToken cancellationToken)
         {
-            Category category = await _documentSession.LoadAsync<Category>(command.Id, cancellationToken);
+            Category category = await _unitOfWork.GetByIdAsync<Category>(command.Id, cancellationToken);
 
             if (category is null)
             {
@@ -36,8 +36,8 @@ namespace Catalog.Application.Commands
 
             category.UpdateDetails(command.Name, command.Description);
 
-            _documentSession.Store(category);
-            await _documentSession.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Category>().UpdateAsync(category, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new UpdateCategoryCommandResponse(true);
         }

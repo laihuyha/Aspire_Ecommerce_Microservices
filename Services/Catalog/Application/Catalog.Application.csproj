@@ -2,7 +2,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Domain\Catalog.Domain.csproj"/>
-        <ProjectReference Include="..\Infrastructure\Catalog.Infrastructure.csproj"/>
         <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj"/>
     </ItemGroup>
 

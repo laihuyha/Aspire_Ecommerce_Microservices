@@ -32,7 +32,7 @@
         <PackageVersion Include="Mapster" Version="7.4.0"/>
         <PackageVersion Include="MediatR" Version="12.5.0"/>
         <PackageVersion Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="12.5.0"/>
-        <PackageVersion Include="Marten" Version="8.11.0"/>
+        <PackageVersion Include="Marten" Version="9.3.4"/>
         <!-- #endregion -->
 
     </ItemGroup>

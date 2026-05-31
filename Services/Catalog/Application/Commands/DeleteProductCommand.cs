@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Product;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Commands
 {
@@ -14,25 +14,25 @@ namespace Catalog.Application.Commands
 
     public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand, DeleteProductCommandResponse>
     {
-        private readonly IDocumentSession _documentSession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteProductCommandHandler(IDocumentSession documentSession)
+        public DeleteProductCommandHandler(IUnitOfWork unitOfWork)
         {
-            _documentSession = documentSession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<DeleteProductCommandResponse> Handle(DeleteProductCommand command,
             CancellationToken cancellationToken)
         {
-            Product product = await _documentSession.LoadAsync<Product>(command.Id, cancellationToken);
+            Product product = await _unitOfWork.GetByIdAsync<Product>(command.Id, cancellationToken);
 
             if (product is null)
             {
                 throw new ProductNotFoundException(command.Id);
             }
 
-            _documentSession.Delete(product);
-            await _documentSession.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Product>().DeleteAsync(product, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new DeleteProductCommandResponse(true);
         }

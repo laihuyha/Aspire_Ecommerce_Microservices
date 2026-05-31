@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Product;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Commands
 {
@@ -19,17 +19,17 @@ namespace Catalog.Application.Commands
 
     public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand, UpdateProductCommandResponse>
     {
-        private readonly IDocumentSession _documentSession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateProductCommandHandler(IDocumentSession documentSession)
+        public UpdateProductCommandHandler(IUnitOfWork unitOfWork)
         {
-            _documentSession = documentSession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<UpdateProductCommandResponse> Handle(UpdateProductCommand command,
             CancellationToken cancellationToken)
         {
-            Product product = await _documentSession.LoadAsync<Product>(command.Id, cancellationToken);
+            Product product = await _unitOfWork.GetByIdAsync<Product>(command.Id, cancellationToken);
 
             if (product is null)
             {
@@ -39,8 +39,8 @@ namespace Catalog.Application.Commands
             product.UpdateBasicInfo(command.Name, command.Description, command.ImageUrl);
             product.SetBasePrice(command.BasePrice);
 
-            _documentSession.Store(product);
-            await _documentSession.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Product>().UpdateAsync(product, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new UpdateProductCommandResponse(true);
         }

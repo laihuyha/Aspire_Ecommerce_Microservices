@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildingBlocks.Common;
 using BuildingBlocks.CQRS;
 using Catalog.Domain.Aggregates.Product;
-using Marten;
+using Catalog.Domain.Interfaces;
+using Catalog.Domain.Specifications;
 
 namespace Catalog.Application.Queries
 {
@@ -36,11 +38,11 @@ namespace Catalog.Application.Queries
 
     public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, GetProductsQueryResponse>
     {
-        private readonly IQuerySession _querySession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetProductsQueryHandler(IQuerySession querySession)
+        public GetProductsQueryHandler(IUnitOfWork unitOfWork)
         {
-            _querySession = querySession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<GetProductsQueryResponse> Handle(GetProductsQuery query, CancellationToken cancellationToken)
@@ -55,22 +57,11 @@ namespace Catalog.Application.Queries
                 throw new ArgumentException("Page size must be between 1 and 100.", nameof(query));
             }
 
-            IQueryable<Product> productsQuery = _querySession.Query<Product>();
+            GetProductsSpecification spec = new(query.Category);
+            PaginatedResult<Product> result = await _unitOfWork.GetPaginatedBySpecAsync<Product>(
+                spec, query.PageNumber, query.PageSize, cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(query.Category))
-            {
-                productsQuery =
-                    productsQuery.Where(p => p.Categories.Any(c => c.CategoryName.Contains(query.Category)));
-            }
-
-            int totalCount = await productsQuery.CountAsync(cancellationToken);
-
-            IReadOnlyList<Product> products = await productsQuery
-                .Skip((query.PageNumber - 1) * query.PageSize)
-                .Take(query.PageSize)
-                .ToListAsync(cancellationToken);
-
-            List<ProductDto> productDtos = products.Select(p => new ProductDto(
+            List<ProductDto> productDtos = result.Items.Select(p => new ProductDto(
                 p.Id,
                 p.Name,
                 p.Categories.Select(c => new CategorySummaryDto(c.CategoryId, c.CategoryName)).ToList(),
@@ -80,7 +71,7 @@ namespace Catalog.Application.Queries
                 p.IsInStock(),
                 p.GetTotalStockQuantity())).ToList();
 
-            return new GetProductsQueryResponse(productDtos, totalCount, query.PageNumber, query.PageSize);
+            return new GetProductsQueryResponse(productDtos, result.TotalCount, query.PageNumber, query.PageSize);
         }
     }
 }

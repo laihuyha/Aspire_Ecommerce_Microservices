@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Category;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Commands
 {
@@ -17,11 +17,11 @@ namespace Catalog.Application.Commands
 
     public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryCommand, CreateCategoryCommandResponse>
     {
-        private readonly IDocumentSession _documentSession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CreateCategoryCommandHandler(IDocumentSession documentSession)
+        public CreateCategoryCommandHandler(IUnitOfWork unitOfWork)
         {
-            _documentSession = documentSession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<CreateCategoryCommandResponse> Handle(CreateCategoryCommand command,
@@ -31,8 +31,7 @@ namespace Catalog.Application.Commands
 
             if (command.ParentCategoryId.HasValue)
             {
-                // Validate parent category exists
-                Category parentCategory = await _documentSession.LoadAsync<Category>(
+                Category parentCategory = await _unitOfWork.GetByIdAsync<Category>(
                     command.ParentCategoryId.Value, cancellationToken);
 
                 if (parentCategory is null)
@@ -52,8 +51,8 @@ namespace Catalog.Application.Commands
                     command.Description);
             }
 
-            _documentSession.Store(category);
-            await _documentSession.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Category>().AddAsync(category, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new CreateCategoryCommandResponse(category.Id);
         }

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildingBlocks.Common;
 using BuildingBlocks.CQRS;
 using Catalog.Domain.Aggregates.Category;
-using Marten;
+using Catalog.Domain.Interfaces;
+using Catalog.Domain.Specifications;
 
 namespace Catalog.Application.Queries
 {
@@ -31,11 +33,11 @@ namespace Catalog.Application.Queries
 
     public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, GetCategoriesQueryResponse>
     {
-        private readonly IQuerySession _querySession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetCategoriesQueryHandler(IQuerySession querySession)
+        public GetCategoriesQueryHandler(IUnitOfWork unitOfWork)
         {
-            _querySession = querySession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<GetCategoriesQueryResponse> Handle(GetCategoriesQuery query,
@@ -51,26 +53,11 @@ namespace Catalog.Application.Queries
                 throw new ArgumentException("Page size must be between 1 and 100.", nameof(query));
             }
 
-            IQueryable<Category> categoriesQuery = _querySession.Query<Category>();
+            CategoryQuerySpecification spec = new(query.RootCategoriesOnly, query.ActiveOnly);
+            PaginatedResult<Category> result = await _unitOfWork.GetPaginatedBySpecAsync<Category>(
+                spec, query.PageNumber, query.PageSize, cancellationToken);
 
-            if (query.RootCategoriesOnly == true)
-            {
-                categoriesQuery = categoriesQuery.Where(c => c.ParentCategoryId == null);
-            }
-
-            if (query.ActiveOnly == true)
-            {
-                categoriesQuery = categoriesQuery.Where(c => c.IsActive);
-            }
-
-            int totalCount = await categoriesQuery.CountAsync(cancellationToken);
-
-            IReadOnlyList<Category> categories = await categoriesQuery
-                .Skip((query.PageNumber - 1) * query.PageSize)
-                .Take(query.PageSize)
-                .ToListAsync(cancellationToken);
-
-            List<CategoryDto> categoryDtos = categories.Select(c => new CategoryDto(
+            List<CategoryDto> categoryDtos = result.Items.Select(c => new CategoryDto(
                 c.Id,
                 c.Name,
                 c.Description,
@@ -78,7 +65,7 @@ namespace Catalog.Application.Queries
                 c.IsActive,
                 c.IsRootCategory())).ToList();
 
-            return new GetCategoriesQueryResponse(categoryDtos, totalCount, query.PageNumber, query.PageSize);
+            return new GetCategoriesQueryResponse(categoryDtos, result.TotalCount, query.PageNumber, query.PageSize);
         }
     }
 }

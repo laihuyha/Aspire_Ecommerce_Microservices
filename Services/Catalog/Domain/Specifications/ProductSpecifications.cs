@@ -169,4 +169,14 @@ namespace Catalog.Domain.Specifications
         {
         }
     }
+
+    public class GetProductsSpecification : BaseSpecification<Product>
+    {
+        public GetProductsSpecification(string categoryName)
+            : base(p => string.IsNullOrWhiteSpace(categoryName)
+                        || p.Categories.Any(c => c.CategoryName.Contains(categoryName)))
+        {
+            ApplyOrderBy(p => p.Name);
+        }
+    }
 }

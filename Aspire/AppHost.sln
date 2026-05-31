@@ -8,17 +8,17 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "ServiceDefaults\ServiceDefaults.csproj", "{3B230EB3-C0E8-4A48-80BE-B72AA6845F92}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-ProjectSection(SolutionItems) = preProject
-		.editorconfig = ..\.editorconfig
-		.gitattributes = ..\.gitattributes
-		.gitignore = ..\.gitignore
-		.dockerignore = ..\.dockerignore
-		.env = ..\.env
-		.env.example = ..\.env.example
-		Directory.Build.props = ..\Directory.Build.props
-		Directory.Packages.props = ..\Directory.Packages.props
-		docker-compose.override.yml = ..\docker-compose.override.yml
-		docker-compose.yml = ..\docker-compose.yml
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.dockerignore = .dockerignore
+		.env = .env
+		.env.example = .env.example
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		docker-compose.override.yml = docker-compose.override.yml
+		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.API", "..\Services\Catalog\API\Catalog.API.csproj", "{293E198C-4D83-4BED-BE70-059B80FDD4FF}"
@@ -33,7 +33,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks", "..\Buildi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Catalog", "Catalog", "{BE1F994C-0280-427B-AA19-2297F8B723D4}"
 EndProject
-
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Basket", "Basket", "{6BC64ED0-FD7B-6402-6067-182150934581}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basket.Domain", "..\Services\Basket\Domain\Basket.Domain.csproj", "{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,7 +131,18 @@ Global
 		{464D5CC3-C2C3-43C1-A781-C76EE06D8F64}.Release|x64.Build.0 = Release|Any CPU
 		{464D5CC3-C2C3-43C1-A781-C76EE06D8F64}.Release|x86.ActiveCfg = Release|Any CPU
 		{464D5CC3-C2C3-43C1-A781-C76EE06D8F64}.Release|x86.Build.0 = Release|Any CPU
-
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|x64.Build.0 = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Debug|x86.Build.0 = Debug|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|x64.ActiveCfg = Release|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|x64.Build.0 = Release|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|x86.ActiveCfg = Release|Any CPU
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +152,7 @@ Global
 		{AE1486A4-EBFA-4B85-BA2D-1046C629279E} = {BE1F994C-0280-427B-AA19-2297F8B723D4}
 		{4D7F925C-8D77-47A8-A2DC-D09E9DAE604A} = {BE1F994C-0280-427B-AA19-2297F8B723D4}
 		{105785A3-84C1-463E-BBA6-00500092C496} = {BE1F994C-0280-427B-AA19-2297F8B723D4}
+		{925E5B60-4ECD-4168-95FB-1C8F63D9DA51} = {6BC64ED0-FD7B-6402-6067-182150934581}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C4BDFFA3-3E02-4190-8F8F-089322A56909}

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Category;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Commands
 {
@@ -14,25 +14,25 @@ namespace Catalog.Application.Commands
 
     public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryCommand, DeleteCategoryCommandResponse>
     {
-        private readonly IDocumentSession _documentSession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteCategoryCommandHandler(IDocumentSession documentSession)
+        public DeleteCategoryCommandHandler(IUnitOfWork unitOfWork)
         {
-            _documentSession = documentSession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<DeleteCategoryCommandResponse> Handle(DeleteCategoryCommand command,
             CancellationToken cancellationToken)
         {
-            Category category = await _documentSession.LoadAsync<Category>(command.Id, cancellationToken);
+            Category category = await _unitOfWork.GetByIdAsync<Category>(command.Id, cancellationToken);
 
             if (category is null)
             {
                 throw new CategoryNotFoundException(command.Id);
             }
 
-            _documentSession.Delete(category);
-            await _documentSession.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Category>().DeleteAsync(category, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new DeleteCategoryCommandResponse(true);
         }

@@ -1,7 +1,7 @@
 ﻿<Project>
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
@@ -12,7 +12,8 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsNotAsErrors>$(WarningsNotAsErrors)</WarningsNotAsErrors>
-        <NoWarn>$(NoWarn);CA1051;CA1054;CA1055;CA1056;CA1303;CA2208;IDE1006;CS1591;CS1711</NoWarn> <!-- Suppress specific warnings for microservices architecture and naming conventions, include XML documentation warnings -->
+        <NoWarn>$(NoWarn);CA1051;CA1054;CA1055;CA1056;CA1303;CA1873;CA2208;IDE1006;CS1591;CS1711</NoWarn> <!-- Suppress specific warnings for microservices architecture and naming conventions, include XML documentation warnings, CA1873 for .NET 10 logging performance -->
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces> <!-- Enable interceptors for OpenAPI source generators in .NET 10 -->
     </PropertyGroup>
 
 

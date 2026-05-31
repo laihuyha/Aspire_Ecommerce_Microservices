@@ -369,3 +369,5 @@ Aspire/.claude/**
 **/.claude/*
 **/.idea/*
 **/.vscode/**
+**/ai/**
+architecture/decision-log.md

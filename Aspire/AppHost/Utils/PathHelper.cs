@@ -37,9 +37,10 @@ namespace AppHost.Utils
             // This is more reliable when the process working directory might be different
             string baseDir = AppContext.BaseDirectory;
 
-            // Navigate up from Aspire/AppHost/bin/Debug/net8.0 to reach the project root
+            // Navigate up from Aspire/AppHost/bin/Debug/net9.0 to reach the project root
+            // Path: bin/Debug/net9.0 -> bin/Debug -> bin -> AppHost -> Aspire -> ProjectRoot
             string rootDirectory = Path.GetFullPath(
-                Path.Combine(baseDir, "..", "..", "..")
+                Path.Combine(baseDir, "..", "..", "..", "..", "..")
             );
 
             return rootDirectory;

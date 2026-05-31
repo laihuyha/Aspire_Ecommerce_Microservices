@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Sdk Name="Aspire.AppHost.Sdk" Version="9.3.0" />
+    <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.1" />
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <UserSecretsId>4a0991a6-97bb-45cd-8ef5-8dc2e9f5e98c</UserSecretsId>
     </PropertyGroup>
 
@@ -17,6 +17,12 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Services\Catalog\API\Catalog.API.csproj" />
+    </ItemGroup>
+
+    <!-- Copy configuration files to output -->
+    <ItemGroup>
+        <None Include="validation.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="infrastructure.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

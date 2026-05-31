@@ -16,6 +16,9 @@ WebApplication app = builder.Build();
 // Correlation ID middleware
 app.UseCorrelationId();
 
+// Global Exception Handling
+app.UseExceptionHandler();
+
 app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline.

@@ -141,15 +141,20 @@ public static class SelfSignCertificateSetup
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Check if Git Bash is available, otherwise use cmd
-            string gitBashPath = @"C:\Program Files\Git\bin\bash.exe";
-            if (File.Exists(gitBashPath))
+            // Try multiple detection methods in order of reliability
+            string bashPath = FindGitBashFromPath()
+                              ?? FindGitBashFromRegistry()
+                              ?? FindGitBashFromEnvironment();
+
+            if (!string.IsNullOrEmpty(bashPath))
             {
-                return gitBashPath;
+                return bashPath;
             }
 
-            // Fall back to cmd
-            return "cmd.exe";
+            // No Git Bash found - throw helpful error instead of falling back to WSL
+            throw new InvalidOperationException(
+                "Git Bash not found. Please install Git for Windows from https://git-scm.com/download/win " +
+                "or manually run the certificate script: bash tools/generate-aspire-cert.sh");
         }
         else
         {
@@ -157,24 +162,126 @@ public static class SelfSignCertificateSetup
         }
     }
 
+    private static string FindGitBashFromPath()
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "where",
+                    Arguments = "git",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+            {
+                // git.exe is usually in cmd folder, bash.exe is in bin folder
+                string gitPath = output.Split('\n')[0].Trim();
+                string gitDir = Path.GetDirectoryName(Path.GetDirectoryName(gitPath));
+                if (gitDir != null)
+                {
+                    string bashPath = Path.Combine(gitDir, "bin", "bash.exe");
+                    if (File.Exists(bashPath))
+                    {
+                        return bashPath;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore errors when searching PATH
+        }
+
+        return null;
+    }
+
+    private static string FindGitBashFromRegistry()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return null;
+        }
+
+        try
+        {
+            // Try to find Git installation from Windows Registry
+            string[] registryPaths =
+            {
+                @"SOFTWARE\GitForWindows",
+                @"SOFTWARE\WOW6432Node\GitForWindows"
+            };
+
+            foreach (string regPath in registryPaths)
+            {
+                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(regPath);
+                if (key?.GetValue("InstallPath") is string installPath)
+                {
+                    string bashPath = Path.Combine(installPath, "bin", "bash.exe");
+                    if (File.Exists(bashPath))
+                    {
+                        return bashPath;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Registry access may fail, ignore
+        }
+
+        return null;
+    }
+
+    private static string FindGitBashFromEnvironment()
+    {
+        // Check common environment variables
+        string[] envVars = { "GIT_HOME", "GIT_DIR", "ProgramFiles", "ProgramFiles(x86)", "LocalAppData" };
+
+        foreach (string envVar in envVars)
+        {
+            string envValue = Environment.GetEnvironmentVariable(envVar);
+            if (string.IsNullOrEmpty(envValue))
+            {
+                continue;
+            }
+
+            // For GIT_HOME/GIT_DIR, bash is directly in bin subfolder
+            // For ProgramFiles, need to add Git folder
+            string[] possiblePaths = envVar.StartsWith("GIT", StringComparison.OrdinalIgnoreCase)
+                ? new[] { Path.Combine(envValue, "bin", "bash.exe") }
+                : new[]
+                {
+                    Path.Combine(envValue, "Git", "bin", "bash.exe"),
+                    Path.Combine(envValue, "Programs", "Git", "bin", "bash.exe")
+                };
+
+            foreach (string bashPath in possiblePaths)
+            {
+                if (File.Exists(bashPath))
+                {
+                    return bashPath;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private static string GetShellArguments(string scriptPath)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            string shell = GetShellCommand();
-            if (shell.EndsWith("bash.exe", StringComparison.OrdinalIgnoreCase))
-            {
-                return $"\"{scriptPath}\"";
-            }
-            else
-            {
-                return $"/c bash \"{scriptPath}\"";
-            }
-        }
-        else
-        {
-            return $"\"{scriptPath}\"";
-        }
+        // On Windows with Git Bash, just pass the script path
+        // On Unix, same approach
+        return $"\"{scriptPath}\"";
     }
 
     public static bool ShouldSetupCertificates(CertificateSetupOptions options)

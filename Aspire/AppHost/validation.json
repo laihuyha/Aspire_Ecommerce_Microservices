@@ -1,11 +1,15 @@
 {
+  "DeploymentMode": {
+    "Mode": "direct",
+    "Description": "Deployment workflow mode: 'direct' (aspire deploy) or 'artifacts' (aspire publish + docker compose)"
+  },
   "CertificateSetup": {
     "Enabled": true,
     "AutoSetup": true,
     "ForceRegenerate": false
   },
   "AllowedHostsValidation": {
-    "Enabled": true,
+    "Enabled": false,
     "ConfigFileName": "appsettings.Development.json",
     "ConfigFileDirectory": "API",
     "RequiredAllowedHostsValue": "*"

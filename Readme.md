@@ -5,7 +5,7 @@ A modular, production-grade microservices solution for ecommerce, built with .NE
 ## 🚀 Quick Start
 
 ### Prerequisites
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://docker.com) and Docker Compose
 - Visual Studio 2022+ or VS Code
 
@@ -18,12 +18,79 @@ cd Aspire_Ecommerce_Microservices
 
 # Run with .NET Aspire (recommended for development)
 dotnet run --project Aspire/AppHost/AppHost.csproj
-
-# Or deploy to Docker Compose for production-like environment
-cd Aspire/AppHost
-aspire deploy -o ./manifests
-docker compose --env-file ./manifests/.env.Production up -d
 ```
+
+### Deployment Options
+
+The project supports two deployment workflows to accommodate different use cases:
+
+#### Option 1: Direct Mode (Default) - One-Step Deployment
+
+**Best for:** Local development, rapid iteration, quick testing
+
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-direct.ps1
+
+# Linux/macOS (Bash)
+./scripts/deploy-direct.sh
+
+# Or with Aspire CLI
+aspire deploy -o .\
+```
+
+This will build and deploy all services in one integrated step.
+
+#### Option 2: Artifacts Mode - Two-Step Deployment
+
+**Best for:** CI/CD pipelines, multiple environments, production deployment
+
+**Step 1: Publish Artifacts**
+```powershell
+# Windows (PowerShell)
+.\scripts\publish-artifacts.ps1 artifacts
+
+# Linux/macOS (Bash)
+./scripts/publish-artifacts.sh artifacts
+
+# Or with Aspire CLI
+aspire publish -o artifacts/
+```
+
+This generates deployment artifacts including `docker-compose.yml`, manifests, and configuration files.
+
+**Step 2: Deploy from Artifacts**
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-from-artifacts.ps1 artifacts dev
+
+# Linux/macOS (Bash)
+./scripts/deploy-from-artifacts.sh artifacts dev
+
+# Or with Docker Compose directly
+docker compose -f artifacts/docker-compose.yml up -d --build
+```
+
+**Switching Modes:** Edit `Aspire/AppHost/validation.json` and set `"DeploymentMode": { "Mode": "artifacts" }`
+
+## 🧹 Clean up Resources
+
+After deploying your application, clean up resources to free up system resources:
+
+### Stop and Remove Containers
+
+```powershell
+# Direct mode — auto-detects project name (recommended)
+.\scripts\stop.ps1
+
+# View logs
+.\scripts\stop.ps1 -Logs
+
+# Artifacts mode
+docker compose -f Aspire/docker-compose.yaml down
+```
+
+> **Note:** `aspire deploy` generates a random project name hash. Use `scripts/stop.ps1` instead of plain `docker compose down` to avoid missing containers. See [CLAUDE.md](CLAUDE.md) for full Docker management commands.
 
 ## 📁 Solution Structure
 
@@ -54,10 +121,10 @@ Aspire_Ecommerce_Microservices/
 ## 📚 Documentation
 
 ### Core Documentation
-- **[HTTPS Certificate Setup](https-certificate-setup.md)** - Complete guide for production-like HTTPS with Docker
-- **[Service Configuration Examples](service-configuration-examples.md)** - How services configure themselves
-- **[Adding New Services](adding-new-services.md)** - Step-by-step guide for new microservices
-- **[Multi-Database Architecture](multi-database-architecture.md)** - Different database types per service
+- **[HTTPS Certificate Setup](Documents/https-certificate-setup.md)** - Complete guide for production-like HTTPS with Docker
+- **[Service Configuration Examples](Documents/service-configuration-examples.md)** - How services configure themselves
+- **[Adding New Services](Documents/adding-new-services.md)** - Step-by-step guide for new microservices
+- **[Multi-Database Architecture](Documents/multi-database-architecture.md)** - Different database types per service
 
 ### Key Features
 - **Configuration Merging**: Services can override global settings while inheriting defaults
@@ -70,8 +137,8 @@ Aspire_Ecommerce_Microservices/
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| **.NET Aspire** | 9.4.2 | Cloud-native orchestration |
-| **ASP.NET Core** | 9.0 | Web API framework |
+| **.NET Aspire** | 13.1.1 | Cloud-native orchestration |
+| **ASP.NET Core** | 10.0 | Web API framework |
 | **MediatR** | 12.5.0 | CQRS messaging |
 | **Marten** | 8.11.0 | Document DB & Event Store |
 | **PostgreSQL** | 16.4 | Primary database |

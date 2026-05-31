@@ -122,7 +122,7 @@ namespace Catalog.Infrastructure.Repositories
     {
         public PaginatedSpecification(Expression<Func<T, bool>> criteria, int skip, int take) : base(criteria)
         {
-            AddPaging(skip, take);
+            ApplyPaging(skip, take);
         }
     }
 }

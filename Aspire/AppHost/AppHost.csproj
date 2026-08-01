@@ -13,6 +13,8 @@
         <PackageReference Include="Aspire.Hosting.Docker" />
         <PackageReference Include="Aspire.Hosting.PostgreSQL" />
         <PackageReference Include="Aspire.Hosting.Redis" />
+        <!-- Pin transitive MessagePack (via Aspire.Hosting -> StreamJsonRpc) past known CVEs -->
+        <PackageReference Include="MessagePack" />
     </ItemGroup>
 
     <ItemGroup>

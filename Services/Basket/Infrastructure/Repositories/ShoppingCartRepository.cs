@@ -46,17 +46,17 @@ namespace Infrastructure.Repositories
 
         public async Task<ShoppingCart> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return await _context.ShoppingCarts.FindAsync(id, cancellationToken);
+            return await _context.ShoppingCarts.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
-        public async Task<ShoppingCart> GetShoppingCartsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<ShoppingCart> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
         {
-            return await _context.ShoppingCarts.FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
+            return await _context.ShoppingCarts.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
         }
 
-        public async Task<ShoppingCart> GetShoppingCartWithItemsAsync(Guid cartId, CancellationToken cancellationToken = default)
+        public async Task<ShoppingCart> GetWithItemsByIdAsync(Guid cartId, CancellationToken cancellationToken = default)
         {
-            return await _context.ShoppingCarts.FindAsync(cartId, cancellationToken);
+            return await _context.ShoppingCarts.AsNoTrackingWithIdentityResolution().Include(c => c.Items).FirstOrDefaultAsync(c => c.Id == cartId, cancellationToken);
         }
 
         public async Task UpdateAsync(ShoppingCart entity, CancellationToken cancellationToken = default)

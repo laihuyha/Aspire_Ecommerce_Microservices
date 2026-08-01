@@ -8,7 +8,6 @@ using Catalog.Api.Responses;
 using Catalog.Application.Commands;
 using Catalog.Application.Queries;
 using Mapster;
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -17,13 +16,6 @@ namespace Catalog.Api.Controllers
 {
     public class ProductController : BaseApiController
     {
-        private readonly IMediator _mediator;
-
-        public ProductController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpGet("{id:guid}")]
         [EndpointName("Get Product By Id")]
         [EndpointSummary("Get a product by its ID")]
@@ -35,7 +27,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken)
         {
             GetProductByIdQuery query = new(id);
-            GetProductByIdQueryResponse response = await _mediator.Send(query, cancellationToken);
+            GetProductByIdQueryResponse response = await Mediator.Send(query, cancellationToken);
             return Ok(response);
         }
 
@@ -51,7 +43,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken = default)
         {
             GetProductsQuery query = new(pageNumber, pageSize, category);
-            GetProductsQueryResponse response = await _mediator.Send(query, cancellationToken);
+            GetProductsQueryResponse response = await Mediator.Send(query, cancellationToken);
             return Ok(response);
         }
 
@@ -76,7 +68,7 @@ namespace Catalog.Api.Controllers
                 product.BasePrice,
                 categories);
 
-            CreateProductCommandResponse response = await _mediator.Send(command, cancellationToken);
+            CreateProductCommandResponse response = await Mediator.Send(command, cancellationToken);
             CreateProductResponse result = response.Adapt<CreateProductResponse>();
             return CreatedAtAction(nameof(GetProductById), new { id = response.ProductId }, result);
         }
@@ -99,7 +91,7 @@ namespace Catalog.Api.Controllers
                 product.Description,
                 product.ImageUrl,
                 product.BasePrice);
-            await _mediator.Send(command, cancellationToken);
+            await Mediator.Send(command, cancellationToken);
             return NoContent();
         }
 
@@ -114,7 +106,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken)
         {
             DeleteProductCommand command = new(id);
-            await _mediator.Send(command, cancellationToken);
+            await Mediator.Send(command, cancellationToken);
             return NoContent();
         }
     }

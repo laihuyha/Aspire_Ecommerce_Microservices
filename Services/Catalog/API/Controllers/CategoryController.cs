@@ -7,7 +7,6 @@ using Catalog.Api.Responses;
 using Catalog.Application.Commands;
 using Catalog.Application.Queries;
 using Mapster;
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -16,13 +15,6 @@ namespace Catalog.Api.Controllers
 {
     public class CategoryController : BaseApiController
     {
-        private readonly IMediator _mediator;
-
-        public CategoryController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpGet("{id:guid}")]
         [EndpointName("Get Category By Id")]
         [EndpointSummary("Get a category by its ID")]
@@ -34,7 +26,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken)
         {
             GetCategoryByIdQuery query = new(id);
-            GetCategoryByIdQueryResponse response = await _mediator.Send(query, cancellationToken);
+            GetCategoryByIdQueryResponse response = await Mediator.Send(query, cancellationToken);
             return Ok(response);
         }
 
@@ -51,7 +43,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken = default)
         {
             GetCategoriesQuery query = new(pageNumber, pageSize, rootCategoriesOnly, activeOnly);
-            GetCategoriesQueryResponse response = await _mediator.Send(query, cancellationToken);
+            GetCategoriesQueryResponse response = await Mediator.Send(query, cancellationToken);
             return Ok(response);
         }
 
@@ -66,7 +58,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken)
         {
             CreateCategoryCommand command = category.Adapt<CreateCategoryCommand>();
-            CreateCategoryCommandResponse response = await _mediator.Send(command, cancellationToken);
+            CreateCategoryCommandResponse response = await Mediator.Send(command, cancellationToken);
             CreateCategoryResponse result = response.Adapt<CreateCategoryResponse>();
             return CreatedAtAction(nameof(GetCategoryById), new { id = response.CategoryId }, result);
         }
@@ -87,7 +79,7 @@ namespace Catalog.Api.Controllers
                 id,
                 category.Name,
                 category.Description);
-            await _mediator.Send(command, cancellationToken);
+            await Mediator.Send(command, cancellationToken);
             return NoContent();
         }
 
@@ -102,7 +94,7 @@ namespace Catalog.Api.Controllers
             CancellationToken cancellationToken)
         {
             DeleteCategoryCommand command = new(id);
-            await _mediator.Send(command, cancellationToken);
+            await Mediator.Send(command, cancellationToken);
             return NoContent();
         }
     }

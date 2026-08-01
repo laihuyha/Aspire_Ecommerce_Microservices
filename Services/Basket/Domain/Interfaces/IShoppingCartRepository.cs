@@ -12,8 +12,8 @@ namespace Basket.Domain.Interfaces
     /// </summary>
     public interface IShoppingCartRepository : IRepository<ShoppingCart>
     {
-        Task<ShoppingCart> GetShoppingCartWithItemsAsync(Guid cartId, CancellationToken cancellationToken = default);
+        Task<ShoppingCart> GetWithItemsByIdAsync(Guid cartId, CancellationToken cancellationToken = default);
 
-        Task<ShoppingCart> GetShoppingCartsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<ShoppingCart> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

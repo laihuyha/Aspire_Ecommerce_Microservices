@@ -11,6 +11,9 @@
         <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.1"/>
         <PackageVersion Include="Aspire.Hosting.Redis" Version="13.1.1"/>
 
+        <!-- Transitive from Aspire.Hosting -> StreamJsonRpc; pinned to patch known CVEs (NU1902/NU1903) in 2.5.192 -->
+        <PackageVersion Include="MessagePack" Version="2.5.302"/>
+
         <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0"/>
         <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.3.0"/>
         <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3"/>

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="Mapster" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Application\Basket.Application.csproj" />
+      <ProjectReference Include="..\Infrastructure\Basket.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <!-- Copy HTTPS certificates to output and publish for Docker deployment -->
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx" Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\certs\aspnetapp.pfx')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Link="certs\aspnetapp.pfx" />
+    </ItemGroup>
+
+</Project>

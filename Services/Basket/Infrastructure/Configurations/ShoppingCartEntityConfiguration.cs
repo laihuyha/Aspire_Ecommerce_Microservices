@@ -13,13 +13,9 @@ namespace Infrastructure.Configurations
         {
             builder.ToTable("ShoppingCarts");
             builder.HasKey(x => x.Id);
-            builder.OwnsMany(x => x.Items, a =>
-            {
-                a.WithOwner().HasForeignKey("ShoppingCartId");
-                a.Property<int>("Id");
-                a.HasKey("Id");
-            });
             builder.Property(x => x.UserId).IsRequired();
+            builder.HasMany(x => x.Items).WithOne().HasForeignKey("ShoppingCartId").OnDelete(DeleteBehavior.Cascade);
+            builder.Navigation(x => x.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

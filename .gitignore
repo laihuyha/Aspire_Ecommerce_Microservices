@@ -371,3 +371,4 @@ Aspire/.claude/**
 **/.vscode/**
 **/ai/**
 architecture/decision-log.md
+.env.Production

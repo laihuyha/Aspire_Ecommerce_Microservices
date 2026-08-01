@@ -20,7 +20,7 @@ namespace BuildingBlocks.Specifications
             Criteria = criteria;
         }
 
-        public Expression<Func<T, bool>> Criteria { get; } = null!;
+        public Expression<Func<T, bool>> Criteria { get; private set; } = null!;
         public List<Expression<Func<T, object>>> Includes { get; } = new();
         public List<string> IncludeStrings { get; } = new();
         public Expression<Func<T, object>> OrderBy { get; private set; } = null!;
@@ -32,6 +32,21 @@ namespace BuildingBlocks.Specifications
         public int Skip { get; private set; }
         public bool IsPagingEnabled { get; private set; }
         public bool IsTrackingEnabled { get; private set; } = true;
+
+        protected void ApplyCriteria(Expression<Func<T, bool>> criteria)
+        {
+            Criteria = criteria;
+        }
+
+        protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
+        {
+            ApplyOrderBy(orderByExpression);
+        }
+
+        protected void AddPaging(int skip, int take)
+        {
+            ApplyPaging(skip, take);
+        }
 
         protected void AddInclude(Expression<Func<T, object>> includeExpression)
         {

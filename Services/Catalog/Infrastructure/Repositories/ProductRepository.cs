@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Catalog.Domain.Aggregates.Product;
 using Catalog.Domain.Interfaces;
 using Catalog.Domain.Specifications;
+using Catalog.Infrastructure.Specifications;
 using Marten;
 
 namespace Catalog.Infrastructure.Repositories
@@ -32,12 +33,16 @@ namespace Catalog.Infrastructure.Repositories
         {
             ProductInStockSpecification specification = new();
 
-            int skip = (pageNumber - 1) * pageSize;
-            PaginatedSpecification<Product> paginatedSpec = new(specification.Criteria, skip, pageSize);
-            paginatedSpec.ApplyOrderBy(specification.OrderBy);
-
             IQueryable<Product> query = _documentSession.Query<Product>();
-            query = MartenSpecificationEvaluator.GetQuery(query, paginatedSpec);
+            if (specification.Criteria != null)
+                query = query.Where(specification.Criteria);
+            if (specification.OrderBy != null)
+                query = query.OrderBy(specification.OrderBy);
+            else if (specification.OrderByDescending != null)
+                query = query.OrderByDescending(specification.OrderByDescending);
+
+            int skip = (pageNumber - 1) * pageSize;
+            query = query.Skip(skip).Take(pageSize);
             return (List<Product>)await query.ToListAsync(cancellationToken);
         }
 

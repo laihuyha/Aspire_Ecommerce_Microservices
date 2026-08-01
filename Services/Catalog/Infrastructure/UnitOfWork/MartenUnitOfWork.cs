@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildingBlocks.Common;
+using BuildingBlocks.Specifications;
 using Catalog.Domain.Aggregates.Product;
 using Catalog.Domain.Entities;
 using Catalog.Domain.Interfaces;
-using Catalog.Domain.Specifications;
 using Catalog.Infrastructure.Repositories;
+using Catalog.Infrastructure.Specifications;
 using Marten;
 
 namespace Catalog.Infrastructure.UnitOfWork
@@ -90,23 +91,19 @@ namespace Catalog.Infrastructure.UnitOfWork
         public async Task<PaginatedResult<T>> GetPaginatedBySpecAsync<T>(ISpecification<T> specification,
             int pageNumber, int pageSize, CancellationToken cancellationToken = default) where T : class
         {
-            // Calculate skip based on page
-            int skip = (pageNumber - 1) * pageSize;
-
-            // Create a specification for pagination
-            PaginatedSpecification<T> paginatedSpec = new(specification.Criteria, skip, pageSize);
-
-            // Apply ordering from original specification
-            if (specification.OrderBy != null)
-            {
-                paginatedSpec.ApplyOrderBy(specification.OrderBy);
-            }
-
-            // Get total count without paging
             int totalCount = await CountAsync(specification, cancellationToken);
 
-            // Get paged results
-            List<T> items = await GetListBySpecAsync(paginatedSpec, cancellationToken);
+            IQueryable<T> query = _documentSession.Query<T>();
+            if (specification.Criteria != null)
+                query = query.Where(specification.Criteria);
+            if (specification.OrderBy != null)
+                query = query.OrderBy(specification.OrderBy);
+            else if (specification.OrderByDescending != null)
+                query = query.OrderByDescending(specification.OrderByDescending);
+
+            int skip = (pageNumber - 1) * pageSize;
+            query = query.Skip(skip).Take(pageSize);
+            List<T> items = (List<T>)await query.ToListAsync(cancellationToken);
 
             return new PaginatedResult<T>(items, totalCount, pageNumber, pageSize);
         }
@@ -173,14 +170,4 @@ namespace Catalog.Infrastructure.UnitOfWork
         }
     }
 
-    /// <summary>
-    ///     Helper specification for pagination.
-    /// </summary>
-    internal sealed class PaginatedSpecification<T> : BaseSpecification<T>
-    {
-        public PaginatedSpecification(Expression<Func<T, bool>> criteria, int skip, int take) : base(criteria)
-        {
-            AddPaging(skip, take);
-        }
-    }
 }

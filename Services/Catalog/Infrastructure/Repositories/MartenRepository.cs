@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildingBlocks.Common;
+using BuildingBlocks.Specifications;
 using Catalog.Domain.Interfaces;
-using Catalog.Domain.Specifications;
+using Catalog.Infrastructure.Specifications;
 using Marten;
 
 namespace Catalog.Infrastructure.Repositories
@@ -40,35 +41,22 @@ namespace Catalog.Infrastructure.Repositories
         public async Task<PaginatedResult<T>> GetPaginatedAsync(ISpecification<T> specification, int pageNumber,
             int pageSize, CancellationToken cancellationToken = default)
         {
-            // Calculate skip based on page
-            int skip = (pageNumber - 1) * pageSize;
-
-            // Create a specification for pagination
-            PaginatedSpecification<T> paginatedSpec = new(specification.Criteria, skip, pageSize);
-
-            // Apply ordering from original specification
-            if (specification.OrderBy != null)
-            {
-                paginatedSpec.ApplyOrderBy(specification.OrderBy);
-            }
-            else if (specification.OrderByDescending != null)
-            {
-                paginatedSpec.ApplyOrderByDescending(specification.OrderByDescending);
-            }
-
-            // Get total count without paging
             IQueryable<T> countQuery = _documentSession.Query<T>();
             if (specification.Criteria != null)
-            {
-                countQuery = MartenSpecificationEvaluator.GetQuery(countQuery, specification);
-            }
-
+                countQuery = countQuery.Where(specification.Criteria);
             int totalCount = await countQuery.CountAsync(cancellationToken);
 
-            // Get paged results
-            IQueryable<T> itemsQuery = _documentSession.Query<T>();
-            itemsQuery = MartenSpecificationEvaluator.GetQuery(itemsQuery, paginatedSpec);
-            List<T> items = (List<T>)await itemsQuery.ToListAsync(cancellationToken);
+            IQueryable<T> query = _documentSession.Query<T>();
+            if (specification.Criteria != null)
+                query = query.Where(specification.Criteria);
+            if (specification.OrderBy != null)
+                query = query.OrderBy(specification.OrderBy);
+            else if (specification.OrderByDescending != null)
+                query = query.OrderByDescending(specification.OrderByDescending);
+
+            int skip = (pageNumber - 1) * pageSize;
+            query = query.Skip(skip).Take(pageSize);
+            List<T> items = (List<T>)await query.ToListAsync(cancellationToken);
 
             return new PaginatedResult<T>(items, totalCount, pageNumber, pageSize);
         }
@@ -113,14 +101,4 @@ namespace Catalog.Infrastructure.Repositories
         }
     }
 
-    /// <summary>
-    ///     Helper specification for pagination in repository.
-    /// </summary>
-    internal sealed class PaginatedSpecification<T> : BaseSpecification<T>
-    {
-        public PaginatedSpecification(Expression<Func<T, bool>> criteria, int skip, int take) : base(criteria)
-        {
-            AddPaging(skip, take);
-        }
-    }
 }

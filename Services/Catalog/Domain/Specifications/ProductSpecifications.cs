@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using BuildingBlocks.Specifications;
 using Catalog.Domain.Aggregates.Product;
 
 namespace Catalog.Domain.Specifications
@@ -161,6 +162,16 @@ namespace Catalog.Domain.Specifications
         public ProductWithSkusSpecification(IEnumerable<string> skus) : base(p =>
             p.Variants.Any(v => skus.Contains(v.SKU)))
         {
+        }
+    }
+
+    public class ProductFilterSpecification : BaseSpecification<Product>
+    {
+        public ProductFilterSpecification(string categoryName = null)
+        {
+            if (!string.IsNullOrWhiteSpace(categoryName))
+                ApplyCriteria(p => p.Categories.Any(c => c.CategoryName.Contains(categoryName)));
+            AddOrderBy(p => p.Name);
         }
     }
 }

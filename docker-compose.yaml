@@ -1,0 +1,96 @@
+name: "aspire-ecommerce"
+services:
+  aspire-ecommerce-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    ports:
+      - "18888"
+    expose:
+      - "18889"
+      - "18890"
+    networks:
+      - "aspire"
+    restart: "always"
+  catalog-postgres:
+    image: "docker.io/postgres:16-alpine"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "${CATALOGUSERNAME}"
+      POSTGRES_PASSWORD: "${CATALOGPASSWORD}"
+    expose:
+      - "5432"
+    volumes:
+      - type: "volume"
+        target: "/var/lib/postgresql/data"
+        source: "catalog_data"
+        read_only: false
+    networks:
+      - "aspire"
+  distributedcache:
+    image: "docker.io/redis:7-alpine"
+    command:
+      - "-c"
+      - "redis-server --requirepass $$REDIS_PASSWORD --save 300 100"
+      - "--maxmemory"
+      - "128mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+    entrypoint:
+      - "/bin/sh"
+    environment:
+      REDIS_PASSWORD: "${DISTRIBUTEDCACHE_PASSWORD}"
+    expose:
+      - "6379"
+    volumes:
+      - type: "volume"
+        target: "/data"
+        source: "redis_data"
+        read_only: false
+    networks:
+      - "aspire"
+  catalog-api:
+    image: "${CATALOG_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "8080"
+      HTTPS_PORTS: "8081"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__Database: "Host=catalog-postgres;Port=5432;Username=${CATALOGUSERNAME};Password=${CATALOGPASSWORD};Database=Database"
+      DATABASE_HOST: "catalog-postgres"
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: "${CATALOGUSERNAME}"
+      DATABASE_PASSWORD: "${CATALOGPASSWORD}"
+      DATABASE_URI: "postgresql://${CATALOGUSERNAME}:${CATALOGPASSWORD}@catalog-postgres:5432/Database"
+      DATABASE_JDBCCONNECTIONSTRING: "jdbc:postgresql://catalog-postgres:5432/Database"
+      DATABASE_DATABASENAME: "Database"
+      ConnectionStrings__distributedcache: "distributedcache:6379,password=${DISTRIBUTEDCACHE_PASSWORD}"
+      DISTRIBUTEDCACHE_HOST: "distributedcache"
+      DISTRIBUTEDCACHE_PORT: "6379"
+      DISTRIBUTEDCACHE_PASSWORD: "${DISTRIBUTEDCACHE_PASSWORD}"
+      DISTRIBUTEDCACHE_URI: "redis://:${DISTRIBUTEDCACHE_PASSWORD}@distributedcache:6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-ecommerce-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "catalog-api"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/app/certs/aspnetapp.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "AspireSecure2024!"
+      ASPNETCORE_Kestrel__Certificates__Default__AllowInvalid: "true"
+    expose:
+      - "${CATALOG_API_PORT}"
+      - "8000"
+      - "8001"
+    depends_on:
+      catalog-postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+networks:
+  aspire:
+    driver: "bridge"
+volumes:
+  catalog_data:
+    driver: "local"
+  redis_data:
+    driver: "local"

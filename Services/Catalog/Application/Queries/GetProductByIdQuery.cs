@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BuildingBlocks.CQRS;
 using Catalog.Application.Exceptions;
 using Catalog.Domain.Aggregates.Product;
-using Marten;
+using Catalog.Domain.Interfaces;
 
 namespace Catalog.Application.Queries
 {
@@ -44,17 +44,17 @@ namespace Catalog.Application.Queries
 
     public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, GetProductByIdQueryResponse>
     {
-        private readonly IQuerySession _querySession;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetProductByIdQueryHandler(IQuerySession querySession)
+        public GetProductByIdQueryHandler(IUnitOfWork unitOfWork)
         {
-            _querySession = querySession;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<GetProductByIdQueryResponse> Handle(GetProductByIdQuery query,
             CancellationToken cancellationToken)
         {
-            Product product = await _querySession.LoadAsync<Product>(query.Id, cancellationToken);
+            Product product = await _unitOfWork.GetByIdAsync<Product>(query.Id, cancellationToken);
 
             if (product is null)
             {

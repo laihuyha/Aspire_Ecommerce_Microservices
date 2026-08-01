@@ -1,12 +1,10 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using BuildingBlocks.Specifications;
 
-namespace Catalog.Domain.Specifications
+namespace Catalog.Infrastructure.Specifications
 {
-    /// <summary>
-    ///     Evaluates specifications against Marten queries.
-    /// </summary>
     public static class MartenSpecificationEvaluator
     {
         public static IQueryable<T> GetQuery<T>(IQueryable<T> inputQuery, ISpecification<T> specification)
@@ -14,13 +12,11 @@ namespace Catalog.Domain.Specifications
         {
             IQueryable<T> query = inputQuery;
 
-            // Apply criteria (where clause)
             if (specification.Criteria != null)
             {
                 query = query.Where(specification.Criteria);
             }
 
-            // Apply ordering
             if (specification.OrderBy != null)
             {
                 query = query.OrderBy(specification.OrderBy);
@@ -30,7 +26,6 @@ namespace Catalog.Domain.Specifications
                 query = query.OrderByDescending(specification.OrderByDescending);
             }
 
-            // Apply then by ordering
             foreach (Expression<Func<T, object>> thenBy in specification.ThenBy)
             {
                 query = ((IOrderedQueryable<T>)query).ThenBy(thenBy);
@@ -41,7 +36,6 @@ namespace Catalog.Domain.Specifications
                 query = ((IOrderedQueryable<T>)query).ThenByDescending(thenByDesc);
             }
 
-            // Apply paging
             if (specification.IsPagingEnabled)
             {
                 query = query.Skip(specification.Skip).Take(specification.Take);

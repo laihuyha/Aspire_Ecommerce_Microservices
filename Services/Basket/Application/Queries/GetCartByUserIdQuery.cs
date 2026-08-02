@@ -2,15 +2,22 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Basket.Application.Exceptions;
-using Basket.Domain.Aggregates;
+using Basket.Domain.Interfaces;
 using BuildingBlocks.CQRS;
-using Domain.Interfaces;
 
-namespace Application.Queries;
+namespace Basket.Application.Queries;
 
-public record GetCartByUserIdQuery(Guid UserId) : IQuery<ShoppingCart>;
+public record GetCartByUserIdQuery(Guid UserId) : IQuery<GetCartByUserIdQueryResponse>;
 
-public class GetCartByUserIdQueryHandler : IQueryHandler<GetCartByUserIdQuery, ShoppingCart>
+public record GetCartByUserIdQueryResponse(
+    Guid Id,
+    Guid UserId,
+    decimal Discount,
+    decimal Coupon,
+    decimal SubTotal,
+    decimal Total);
+
+public class GetCartByUserIdQueryHandler : IQueryHandler<GetCartByUserIdQuery, GetCartByUserIdQueryResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -19,10 +26,17 @@ public class GetCartByUserIdQueryHandler : IQueryHandler<GetCartByUserIdQuery, S
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ShoppingCart> Handle(GetCartByUserIdQuery request, CancellationToken cancellationToken)
+    public async Task<GetCartByUserIdQueryResponse> Handle(GetCartByUserIdQuery request, CancellationToken cancellationToken)
     {
         var cart = await _unitOfWork.ShoppingCarts.GetByUserIdAsync(request.UserId, cancellationToken);
         if (cart is null) throw new CartNotFoundException(request.UserId);
-        return cart;
+
+        return new GetCartByUserIdQueryResponse(
+            cart.Id,
+            cart.UserId,
+            cart.Discount,
+            cart.Coupon,
+            cart.SubTotal,
+            cart.Total);
     }
 }

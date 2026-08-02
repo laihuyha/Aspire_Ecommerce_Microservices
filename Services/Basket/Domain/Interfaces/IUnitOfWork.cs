@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Basket.Domain.Aggregates;
 using Basket.Domain.Interfaces;
 
-namespace Domain.Interfaces
+namespace Basket.Domain.Interfaces
 {
     /// <summary>
     ///     Unit of Work interface for managing database operations and transactions.

@@ -7,7 +7,7 @@ using Basket.Domain.Aggregates;
 using Basket.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories
+namespace Basket.Infrastructure.Repositories
 {
     public class ShoppingCartRepository : IShoppingCartRepository
     {

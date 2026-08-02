@@ -1,8 +1,9 @@
 using System.Reflection;
 using Basket.Domain.Aggregates;
+using Basket.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure
+namespace Basket.Infrastructure
 {
     public class BasketDbContext : DbContext
     {
@@ -17,5 +18,6 @@ namespace Infrastructure
         }
 
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
     }
 }

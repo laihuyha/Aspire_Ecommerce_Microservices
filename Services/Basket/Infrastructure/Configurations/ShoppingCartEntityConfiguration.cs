@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Basket.Domain.Aggregates;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Configurations
+namespace Basket.Infrastructure.Configurations
 {
     public class ShoppingCartEntityConfiguration : IEntityTypeConfiguration<ShoppingCart>
     {

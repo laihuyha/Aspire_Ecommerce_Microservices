@@ -3,11 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Basket.Domain.Aggregates;
 using Basket.Domain.Interfaces;
-using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace Infrastructure.Repositories
+namespace Basket.Infrastructure.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {

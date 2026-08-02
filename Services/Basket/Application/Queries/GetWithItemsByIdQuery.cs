@@ -1,17 +1,38 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Basket.Application.Exceptions;
-using Basket.Domain.Aggregates;
 using Basket.Domain.Interfaces;
 using BuildingBlocks.CQRS;
-using Domain.Interfaces;
 
-namespace Application.Queries;
+namespace Basket.Application.Queries;
 
-public record GetCartWithItemsQuery(Guid CartId) : IQuery<ShoppingCart>;
+public record GetCartWithItemsQuery(Guid CartId) : IQuery<GetCartWithItemsQueryResponse>;
 
-public class GetCartWithItemsQueryHandler : IQueryHandler<GetCartWithItemsQuery, ShoppingCart>
+public record CartItemResponse(
+    Guid Id,
+    Guid ProductId,
+    string ProductName,
+    string ImageUrl,
+    decimal UnitPrice,
+    int Quantity,
+    decimal SubTotal,
+    Guid? VariantId,
+    string VariantName,
+    string SKU);
+
+public record GetCartWithItemsQueryResponse(
+    Guid Id,
+    Guid UserId,
+    decimal Discount,
+    decimal Coupon,
+    decimal SubTotal,
+    decimal Total,
+    IReadOnlyCollection<CartItemResponse> Items);
+
+public class GetCartWithItemsQueryHandler : IQueryHandler<GetCartWithItemsQuery, GetCartWithItemsQueryResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -20,10 +41,30 @@ public class GetCartWithItemsQueryHandler : IQueryHandler<GetCartWithItemsQuery,
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ShoppingCart> Handle(GetCartWithItemsQuery request, CancellationToken cancellationToken)
+    public async Task<GetCartWithItemsQueryResponse> Handle(GetCartWithItemsQuery request, CancellationToken cancellationToken)
     {
         var cart = await _unitOfWork.ShoppingCarts.GetWithItemsByIdAsync(request.CartId, cancellationToken);
         if (cart is null) throw new CartNotFoundException(request.CartId);
-        return cart;
+
+        var items = cart.Items.Select(item => new CartItemResponse(
+            item.Id,
+            item.ProductId,
+            item.ProductName,
+            item.ImageUrl,
+            item.UnitPrice,
+            item.Quantity,
+            item.SubTotal,
+            item.VariantId,
+            item.VariantName,
+            item.SKU)).ToList();
+
+        return new GetCartWithItemsQueryResponse(
+            cart.Id,
+            cart.UserId,
+            cart.Discount,
+            cart.Coupon,
+            cart.SubTotal,
+            cart.Total,
+            items);
     }
 }

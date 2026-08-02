@@ -9,16 +9,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "ServiceD
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		.gitattributes = .gitattributes
-		.gitignore = .gitignore
-		.dockerignore = .dockerignore
-		.env = .env
-		.env.example = .env.example
-		Directory.Build.props = Directory.Build.props
-		Directory.Packages.props = Directory.Packages.props
-		docker-compose.override.yml = docker-compose.override.yml
-		docker-compose.yml = docker-compose.yml
+		..\.editorconfig = ..\.editorconfig
+		..\.gitattributes = ..\.gitattributes
+		..\.gitignore = ..\.gitignore
+		..\.dockerignore = ..\.dockerignore
+		..\.env = ..\.env
+		..\.env.example = ..\.env.example
+		..\Directory.Build.props = ..\Directory.Build.props
+		..\Directory.Packages.props = ..\Directory.Packages.props
+		..\docker-compose.override.yml = ..\docker-compose.override.yml
+		..\docker-compose.yml = ..\docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.API", "..\Services\Catalog\API\Catalog.API.csproj", "{293E198C-4D83-4BED-BE70-059B80FDD4FF}"
@@ -185,6 +185,30 @@ Global
 		{5CC522F3-F92E-4B91-A889-FE93E5FC5967}.Release|x64.Build.0 = Release|Any CPU
 		{5CC522F3-F92E-4B91-A889-FE93E5FC5967}.Release|x86.ActiveCfg = Release|Any CPU
 		{5CC522F3-F92E-4B91-A889-FE93E5FC5967}.Release|x86.Build.0 = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|x64.Build.0 = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{8BBFE64F-6C5B-4524-A9BD-C42D139095AE}.Release|x86.Build.0 = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|x64.Build.0 = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Debug|x86.Build.0 = Debug|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|x64.ActiveCfg = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|x64.Build.0 = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|x86.ActiveCfg = Release|Any CPU
+		{4F85D9D8-9286-4D7C-8AA9-2D7D289B31CD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

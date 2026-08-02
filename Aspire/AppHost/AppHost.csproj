@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Services\Catalog\API\Catalog.API.csproj" />
+        <ProjectReference Include="..\..\Services\Basket\API\Basket.API.csproj" />
     </ItemGroup>
 
     <!-- Copy configuration files to output -->

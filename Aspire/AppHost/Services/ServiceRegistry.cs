@@ -86,6 +86,7 @@ public sealed class ServiceRegistry
     public static ServiceRegistry CreateDefault()
     {
         return new ServiceRegistry()
-            .Add<CatalogServiceDefinition>();
+            .Add<CatalogServiceDefinition>()
+            .Add<BasketServiceDefinition>();
     }
 }

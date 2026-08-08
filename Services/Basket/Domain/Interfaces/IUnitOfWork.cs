@@ -14,11 +14,7 @@ namespace Basket.Domain.Interfaces
         IShoppingCartRepository ShoppingCarts { get; }
 
         Task BeginTransactionAsync(CancellationToken cancellationToken = default);
-        Task CommitTransactionAsync(CancellationToken cancellationToken = default);
-        Task<ShoppingCart> AddShoppingCartAsync(ShoppingCart shoppingCart, CancellationToken cancellationToken = default);
-        Task<ShoppingCart> UpdateShoppingCartAsync(ShoppingCart shoppingCart, CancellationToken cancellationToken = default);
-        Task<ShoppingCart> GetShoppingCartByUserIdAsync(string userId, CancellationToken cancellationToken = default);
-        Task DeleteShoppingCartAsync(string userId, CancellationToken cancellationToken = default);
+        Task<bool> CommitTransactionAsync(CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default);
     }

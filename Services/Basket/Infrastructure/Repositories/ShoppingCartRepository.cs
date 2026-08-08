@@ -59,6 +59,11 @@ namespace Basket.Infrastructure.Repositories
             return await _context.ShoppingCarts.AsNoTrackingWithIdentityResolution().Include(c => c.Items).FirstOrDefaultAsync(c => c.Id == cartId, cancellationToken);
         }
 
+        public async Task<ShoppingCart> GetTrackedWithItemsByIdAsync(Guid cartId, CancellationToken cancellationToken = default)
+        {
+            return await _context.ShoppingCarts.Include(c => c.Items).FirstOrDefaultAsync(c => c.Id == cartId, cancellationToken);
+        }
+
         public async Task UpdateAsync(ShoppingCart entity, CancellationToken cancellationToken = default)
         {
             _context.ShoppingCarts.Update(entity);

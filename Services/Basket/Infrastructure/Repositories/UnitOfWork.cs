@@ -32,7 +32,7 @@ namespace Basket.Infrastructure.Repositories
             _currentTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         }
 
-        public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_currentTransaction == null)
                 throw new InvalidOperationException("No active transaction to commit.");
@@ -52,39 +52,7 @@ namespace Basket.Infrastructure.Repositories
                 _currentTransaction.Dispose();
                 _currentTransaction = null;
             }
-        }
-
-        public async Task<ShoppingCart> AddShoppingCartAsync(ShoppingCart shoppingCart, CancellationToken cancellationToken = default)
-        {
-            await _context.ShoppingCarts.AddAsync(shoppingCart, cancellationToken);
-            return shoppingCart;
-        }
-
-        public Task<ShoppingCart> UpdateShoppingCartAsync(ShoppingCart shoppingCart, CancellationToken cancellationToken = default)
-        {
-            _context.ShoppingCarts.Update(shoppingCart);
-            return Task.FromResult(shoppingCart);
-        }
-
-        public async Task<ShoppingCart> GetShoppingCartByUserIdAsync(string userId, CancellationToken cancellationToken = default)
-        {
-            if (!Guid.TryParse(userId, out Guid userGuid))
-                throw new ArgumentException($"Invalid user ID format: '{userId}'.", nameof(userId));
-
-            return await _context.ShoppingCarts
-                .FirstOrDefaultAsync(c => c.UserId == userGuid, cancellationToken);
-        }
-
-        public async Task DeleteShoppingCartAsync(string userId, CancellationToken cancellationToken = default)
-        {
-            if (!Guid.TryParse(userId, out Guid userGuid))
-                throw new ArgumentException($"Invalid user ID format: '{userId}'.", nameof(userId));
-
-            ShoppingCart cart = await _context.ShoppingCarts
-                .FirstOrDefaultAsync(c => c.UserId == userGuid, cancellationToken);
-
-            if (cart != null)
-                _context.ShoppingCarts.Remove(cart);
+            return true;
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

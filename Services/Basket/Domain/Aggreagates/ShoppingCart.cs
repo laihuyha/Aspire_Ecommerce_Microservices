@@ -72,18 +72,18 @@ namespace Basket.Domain.Aggregates
         public void UpdateItem(Guid productId, int quantity)
         {
             ShoppingCartItem existingItem = _items.FirstOrDefault(i => i.ProductId == productId);
-            if (existingItem != null)
+            if (existingItem == null)
+                throw new DomainException($"Product {productId} is not in the cart.");
+
+            if (quantity <= 0)
             {
-                if (quantity <= 0)
-                {
-                    _items.Remove(existingItem);
-                    AddDomainEvent(new ShoppingCartItemRemovedEvent(Id, productId));
-                }
-                else
-                {
-                    existingItem.UpdateQuantity(quantity);
-                    AddDomainEvent(new ShoppingCartItemUpdatedEvent(Id, productId, quantity));
-                }
+                _items.Remove(existingItem);
+                AddDomainEvent(new ShoppingCartItemRemovedEvent(Id, productId));
+            }
+            else
+            {
+                existingItem.UpdateQuantity(quantity);
+                AddDomainEvent(new ShoppingCartItemUpdatedEvent(Id, productId, quantity));
             }
         }
 

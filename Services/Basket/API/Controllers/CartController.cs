@@ -87,6 +87,24 @@ namespace Basket.Api.Controllers
             return Ok(response);
         }
 
+        [HttpPost("{id:guid}")]
+        [EndpointName("Delete Cart")]
+        [EndpointSummary("Directly remove cart")]
+        [Description("Just simple remove cart by id.")]
+        [ProducesResponseType(typeof(DeleteCartCommandResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DeleteCartCommandResponse>> DeleteCart(Guid id, DeleteCartCommand request, CancellationToken cancellationToken)
+        {
+            if (id != request.UserId)
+            {
+                return BadRequest();
+            }
+
+            DeleteCartCommandResponse response = await Mediator.Send(request, cancellationToken);
+            return Ok(response);
+        }
+
         #endregion
     }
 }
